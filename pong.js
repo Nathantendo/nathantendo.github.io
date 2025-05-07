@@ -1,7 +1,6 @@
 const canvas = document.getElementById("pongCanvas");
 const ctx = canvas.getContext("2d");
 
-// Resize canvas to fill the screen
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -12,14 +11,11 @@ window.addEventListener("resize", resizeCanvas);
 const paddleWidth = 10, paddleHeight = canvas.height * 0.2;
 const ballSize = 15;
 
-// Paddle objects
 const leftPaddle = { x: 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
 const rightPaddle = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
 
-// Ball object
 const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 5, dy: 5 };
 
-// Draw function
 function draw() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -33,15 +29,12 @@ function draw() {
     ctx.fill();
 }
 
-// Update function
 function update() {
     leftPaddle.y += leftPaddle.dy;
     rightPaddle.y += rightPaddle.dy;
-
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Ball collisions
     if (ball.y <= 0 || ball.y >= canvas.height) ball.dy *= -1;
     
     if ((ball.x <= leftPaddle.x + paddleWidth && ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight) ||
@@ -52,7 +45,6 @@ function update() {
     requestAnimationFrame(loop);
 }
 
-// Game loop
 function loop() {
     draw();
     update();
@@ -60,15 +52,15 @@ function loop() {
 
 loop();
 
-// Paddle controls
-window.addEventListener("keydown", (e) => {
-    if (e.key === "w") leftPaddle.dy = -5;
-    if (e.key === "s") leftPaddle.dy = 5;
-    if (e.key === "ArrowUp") rightPaddle.dy = -5;
-    if (e.key === "ArrowDown") rightPaddle.dy = 5;
-});
+// **Touch Controls**
+canvas.addEventListener("touchmove", (e) => {
+    const touch = e.touches[0];
+    const touchX = touch.clientX;
+    const touchY = touch.clientY;
 
-window.addEventListener("keyup", () => {
-    leftPaddle.dy = 0;
-    rightPaddle.dy = 0;
+    if (touchX < canvas.width / 2) {
+        leftPaddle.y = touchY - paddleHeight / 2;
+    } else {
+        rightPaddle.y = touchY - paddleHeight / 2;
+    }
 });
