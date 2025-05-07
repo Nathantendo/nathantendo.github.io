@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Mario-like Game</title>
+    <style>
+        body {
+            background-color: skyblue;
+            overflow: hidden;
+        }
+        #game {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            background-color: lightgreen;
+            margin: auto;
+            border: 2px solid black;
+        }
+        .player {
+            width: 40px;
+            height: 40px;
+            background-color: red;
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game">
+    <div class="player" id="player"></div>
+</div>
+
+<script>
+    document.addEventListener("keydown", function(event) {
+        const player = document.getElementById("player");
+        let left = parseInt(window.getComputedStyle(player).left);
+        
+        if (event.key === "ArrowRight" && left < 760) {
+            player.style.left = left + 20 + "px";
+        } else if (event.key === "ArrowLeft" && left > 0) {
+            player.style.left = left - 20 + "px";
+        }
+    });
+</script>
+
+</body>
+</html>
