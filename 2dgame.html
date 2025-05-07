@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Platformer</title>
+    <style>
+        canvas {
+            background: lightblue;
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let player = { x: 50, y: 300, width: 30, height: 30, speedX: 0, speedY: 0, gravity: 0.5 };
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "ArrowRight") player.speedX = 5;
+            if (event.code === "ArrowLeft") player.speedX = -5;
+            if (event.code === "ArrowUp" && player.y >= 300) player.speedY = -10;
+        });
+
+        document.addEventListener("keyup", () => player.speedX = 0);
+
+        function updateGame() {
+            player.speedY += player.gravity;
+            player.x += player.speedX;
+            player.y += player.speedY;
+
+            if (player.y >= 300) player.y = 300;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "red";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            requestAnimationFrame(updateGame);
+        }
+
+        updateGame();
+    </script>
+</body>
+</html>
