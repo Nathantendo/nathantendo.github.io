@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Puzzle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .letters {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        .letter {
+            font-size: 24px;
+            padding: 10px;
+            margin: 5px;
+            background-color: lightblue;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .input {
+            font-size: 24px;
+            margin: 20px;
+            border-bottom: 2px solid black;
+            min-height: 30px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Puzzle Game</h1>
+    <div class="input"></div>
+    <div class="letters"></div>
+    <button onclick="checkWord()">Submit Word</button>
+    <p id="message"></p>
+
+    <script>
+        const validWords = ["cat", "act", "tac"];
+        const shuffledLetters = ["c", "a", "t"];
+        let selectedWord = "";
+
+        function displayLetters() {
+            const letterContainer = document.querySelector(".letters");
+            shuffledLetters.sort(() => Math.random() - 0.5);
+            shuffledLetters.forEach(letter => {
+                const span = document.createElement("span");
+                span.classList.add("letter");
+                span.innerText = letter;
+                span.onclick = () => addLetter(letter);
+                letterContainer.appendChild(span);
+            });
+        }
+
+        function addLetter(letter) {
+            selectedWord += letter;
+            document.querySelector(".input").innerText = selectedWord;
+        }
+
+        function checkWord() {
+            const message = document.getElementById("message");
+            if (validWords.includes(selectedWord)) {
+                message.innerText = "Correct!";
+            } else {
+                message.innerText = "Try again!";
+            }
+            selectedWord = "";
+            document.querySelector(".input").innerText = "";
+        }
+
+        displayLetters();
+    </script>
+</body>
+</html>
