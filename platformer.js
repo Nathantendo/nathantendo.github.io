@@ -4,26 +4,27 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const gravity = 0.5;
+const gravity = 0.6;
 const player = {
-    x: 100, y: canvas.height - 150, width: 40, height: 60, dy: 0, jumping: false
+    x: 100, y: canvas.height - 150, width: 40, height: 60, dy: 0, jumping: false, sprite: new Image()
 };
+player.sprite.src = "player.png"; // Add a custom sprite
 
 const groundHeight = 100;
-const platforms = [{ x: 200, y: canvas.height - 200, width: 100, height: 20 }];
+const platforms = [{ x: 300, y: canvas.height - 200, width: 150, height: 20 }];
 const keys = {};
+let score = 0;
 
 function draw() {
-    ctx.fillStyle = "skyblue";
+    ctx.fillStyle = "#5c94fc";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "green";
+    ctx.fillStyle = "#228B22"; 
     ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
 
-    ctx.fillStyle = "red";
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    ctx.drawImage(player.sprite, player.x, player.y, player.width, player.height);
 
-    ctx.fillStyle = "brown";
+    ctx.fillStyle = "#8B4513"; 
     platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
 }
 
@@ -32,7 +33,7 @@ function update() {
     if (keys["ArrowRight"]) player.x += 5;
 
     if (keys["ArrowUp"] && !player.jumping) {
-        player.dy = -10;
+        player.dy = -12;
         player.jumping = true;
     }
 
@@ -54,6 +55,8 @@ function update() {
         }
     });
 
+    document.getElementById("score").innerText = score;
+
     requestAnimationFrame(loop);
 }
 
@@ -64,5 +67,6 @@ function loop() {
 
 loop();
 
+// Controls
 window.addEventListener("keydown", (e) => keys[e.key] = true);
 window.addEventListener("keyup", (e) => keys[e.key] = false);
