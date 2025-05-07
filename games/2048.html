@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smooth 2048 Game</title>
+    <title>2048 Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +23,6 @@
             background: #bbada0;
             padding: 10px;
             margin: auto;
-            position: relative;
         }
         .tile {
             width: 90px;
@@ -36,13 +35,11 @@
             background: #cdc1b4;
             color: #776e65;
             border-radius: 5px;
-            position: absolute;
-            transition: transform 0.2s ease-in-out;
         }
     </style>
 </head>
 <body>
-    <h1>Smooth 2048 Game</h1>
+    <h1>2048 Game</h1>
     <div id="gameBoard"></div>
     <p>Use Arrow Keys to Move the Tiles</p>
 
@@ -70,18 +67,12 @@
         function drawBoard() {
             const gameBoard = document.getElementById("gameBoard");
             gameBoard.innerHTML = "";
-
-            board.forEach((row, r) => {
-                row.forEach((value, c) => {
-                    if (value) {
-                        let tile = document.createElement("div");
-                        tile.className = "tile";
-                        tile.textContent = value;
-                        tile.style.transform = `translate(${c * 100}px, ${r * 100}px)`;
-                        tile.style.background = value ? "#eee4da" : "#cdc1b4";
-                        gameBoard.appendChild(tile);
-                    }
-                });
+            board.flat().forEach(value => {
+                let tile = document.createElement("div");
+                tile.className = "tile";
+                tile.textContent = value || "";
+                tile.style.background = value ? "#eee4da" : "#cdc1b4";
+                gameBoard.appendChild(tile);
             });
         }
 
@@ -118,10 +109,8 @@
                 }
             }
 
-            if (changed) {
-                addRandomTile();
-                requestAnimationFrame(drawBoard);
-            }
+            if (changed) addRandomTile();
+            drawBoard();
         }
 
         document.addEventListener("keydown", (event) => {
