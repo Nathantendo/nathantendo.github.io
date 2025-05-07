@@ -1,18 +1,23 @@
 const canvas = document.getElementById("pongCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 800;
-canvas.height = 400;
+// Resize canvas to fill the screen
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-const paddleWidth = 10, paddleHeight = 100;
-const ballSize = 10;
+const paddleWidth = 10, paddleHeight = canvas.height * 0.2;
+const ballSize = 15;
 
 // Paddle objects
-const leftPaddle = { x: 10, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
-const rightPaddle = { x: canvas.width - 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
+const leftPaddle = { x: 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
+const rightPaddle = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2, dy: 0 };
 
 // Ball object
-const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 4, dy: 4 };
+const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 5, dy: 5 };
 
 // Draw function
 function draw() {
@@ -39,8 +44,8 @@ function update() {
     // Ball collisions
     if (ball.y <= 0 || ball.y >= canvas.height) ball.dy *= -1;
     
-    if (ball.x <= leftPaddle.x + paddleWidth && ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight ||
-        ball.x >= rightPaddle.x && ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + paddleHeight) {
+    if ((ball.x <= leftPaddle.x + paddleWidth && ball.y >= leftPaddle.y && ball.y <= leftPaddle.y + paddleHeight) ||
+        (ball.x >= rightPaddle.x && ball.y >= rightPaddle.y && ball.y <= rightPaddle.y + paddleHeight)) {
         ball.dx *= -1;
     }
 
