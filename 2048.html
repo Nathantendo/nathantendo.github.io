@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f8f8f8;
+            margin: 0;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #gameBoard {
+            width: 400px;
+            height: 400px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: #bbada0;
+            padding: 10px;
+            margin: auto;
+        }
+        .tile {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            background: #cdc1b4;
+            color: #776e65;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>2048 Game</h1>
+    <div id="gameBoard"></div>
+    <p>Use Arrow Keys to Move the Tiles</p>
+
+    <script>
+        const boardSize = 4;
+        let board = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
+
+        function getEmptyTiles() {
+            let empty = [];
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    if (board[r][c] === 0) empty.push({ r, c });
+                }
+            }
+            return empty;
+        }
+
+        function addRandomTile() {
+            let emptyTiles = getEmptyTiles();
+            if (emptyTiles.length === 0) return;
+            let { r, c } = emptyTiles[Math.floor(Math.random() * emptyTiles.length)];
+            board[r][c] = Math.random() > 0.8 ? 4 : 2;
+        }
+
+        function drawBoard() {
+            const gameBoard = document.getElementById("gameBoard");
+            gameBoard.innerHTML = "";
+            board.flat().forEach(value => {
+                let tile = document.createElement("div");
+                tile.className = "tile";
+                tile.textContent = value || "";
+                tile.style.background = value ? "#eee4da" : "#cdc1b4";
+                gameBoard.appendChild(tile);
+            });
+        }
+
+        function move(direction) {
+            let changed = false;
+            const mergeRow = row => {
+                let filtered = row.filter(v => v);
+                for (let i = 0; i < filtered.length - 1; i++) {
+                    if (filtered[i] === filtered[i + 1]) {
+                        filtered[i] *= 2;
+                        filtered.splice(i + 1, 1);
+                    }
+                }
+                while (filtered.length < boardSize) filtered.push(0);
+                return filtered;
+            };
+
+            if (direction === "ArrowUp" || direction === "ArrowDown") {
+                for (let c = 0; c < boardSize; c++) {
+                    let column = board.map(row => row[c]);
+                    let newColumn = mergeRow(direction === "ArrowUp" ? column : column.reverse());
+                    if (direction === "ArrowDown") newColumn.reverse();
+                    board.forEach((row, r) => {
+                        if (row[c] !== newColumn[r]) changed = true;
+                        row[c] = newColumn[r];
+                    });
+                }
+            } else if (direction === "ArrowLeft" || direction === "ArrowRight") {
+                for (let r = 0; r < boardSize; r++) {
+                    let newRow = mergeRow(direction === "ArrowLeft" ? board[r] : board[r].reverse());
+                    if (direction === "ArrowRight") newRow.reverse();
+                    if (board[r].join() !== newRow.join()) changed = true;
+                    board[r] = newRow;
+                }
+            }
+
+            if (changed) addRandomTile();
+            drawBoard();
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+                move(event.key);
+            }
+        });
+
+        function startGame() {
+            addRandomTile();
+            addRandomTile();
+            drawBoard();
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
