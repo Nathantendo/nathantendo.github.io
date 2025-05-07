@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wii Home Screen Simulator</title>
+    <style>
+        body {
+            background-color: #87CEEB;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .tile {
+            width: 120px;
+            height: 100px;
+            margin: 10px;
+            background-color: white;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .tile:hover {
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="tile">Mii Channel</div>
+    <div class="tile">Photo Channel</div>
+    <div class="tile">Wii Shop</div>
+    <div class="tile">Settings</div>
+    <script>
+        const tiles = document.querySelectorAll('.tile');
+        tiles.forEach(tile => {
+            tile.addEventListener('click', () => {
+                alert(`Opening ${tile.textContent}...`);
+            });
+        });
+    </script>
+</body>
+</html>
