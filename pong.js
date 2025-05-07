@@ -16,6 +16,9 @@ const rightPaddle = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight 
 
 const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 5, dy: 5 };
 
+// Store active keys
+const keys = {};
+
 function draw() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -30,8 +33,11 @@ function draw() {
 }
 
 function update() {
-    leftPaddle.y += leftPaddle.dy;
-    rightPaddle.y += rightPaddle.dy;
+    if (keys["w"]) leftPaddle.y -= 5;
+    if (keys["s"]) leftPaddle.y += 5;
+    if (keys["ArrowUp"]) rightPaddle.y -= 5;
+    if (keys["ArrowDown"]) rightPaddle.y += 5;
+
     ball.x += ball.dx;
     ball.y += ball.dy;
 
@@ -52,15 +58,11 @@ function loop() {
 
 loop();
 
-// **Touch Controls**
-canvas.addEventListener("touchmove", (e) => {
-    const touch = e.touches[0];
-    const touchX = touch.clientX;
-    const touchY = touch.clientY;
+// **Track multiple keys for simultaneous movement**
+window.addEventListener("keydown", (e) => {
+    keys[e.key] = true;
+});
 
-    if (touchX < canvas.width / 2) {
-        leftPaddle.y = touchY - paddleHeight / 2;
-    } else {
-        rightPaddle.y = touchY - paddleHeight / 2;
-    }
+window.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
 });
