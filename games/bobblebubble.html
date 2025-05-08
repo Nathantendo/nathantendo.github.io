@@ -1,0 +1,15 @@
+<canvas id="gameCanvas"></canvas>
+<script>
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 800;
+  canvas.height = 600;
+
+  function drawPlayer(x, y) {
+    ctx.fillStyle = "blue";
+    ctx.fillRect(x, y, 40, 40);
+  }
+
+  drawPlayer(100, 500);
+</script>
