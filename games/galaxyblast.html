@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaga Arcade Clone</title>
+    <title>Galaga Arcade Clone with UFOs</title>
     <style>
         canvas { background: black; display: block; margin: auto; }
     </style>
@@ -16,12 +16,17 @@
 
         let player = { x: canvas.width / 2, y: canvas.height - 50, width: 40, height: 40, speed: 5 };
         let bullets = [];
-        let enemies = [];
+        let ufos = [];
+        let score = 0;
+
+        function spawnUFO() {
+            ufos.push({ x: Math.random() * canvas.width, y: 50, width: 40, height: 30, speed: 2 });
+        }
 
         document.addEventListener("keydown", (event) => {
             if (event.key === "ArrowLeft" && player.x > 0) player.x -= player.speed;
             if (event.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += player.speed;
-            if (event.key === " ") bullets.push({ x: player.x + player.width / 2, y: player.y, speed: 7 });
+            if (event.key === " ") bullets.push({ x: player.x + player.width / 2, y: player.y, width: 5, height: 10, speed: 7 });
         });
 
         function update() {
@@ -32,16 +37,43 @@
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
             // Move and draw bullets
-            bullets.forEach((bullet, index) => {
+            bullets.forEach((bullet, bulletIndex) => {
                 bullet.y -= bullet.speed;
                 ctx.fillStyle = "red";
-                ctx.fillRect(bullet.x, bullet.y, 5, 10);
-                if (bullet.y < 0) bullets.splice(index, 1);
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+                if (bullet.y < 0) bullets.splice(bulletIndex, 1);
             });
+
+            // Move and draw UFOs
+            ufos.forEach((ufo, ufoIndex) => {
+                ufo.x += ufo.speed;
+                if (ufo.x > canvas.width || ufo.x < 0) ufo.speed *= -1;
+                ctx.fillStyle = "green";
+                ctx.fillRect(ufo.x, ufo.y, ufo.width, ufo.height);
+
+                // Check for collisions
+                bullets.forEach((bullet, bulletIndex) => {
+                    if (bullet.x < ufo.x + ufo.width &&
+                        bullet.x + bullet.width > ufo.x &&
+                        bullet.y < ufo.y + ufo.height &&
+                        bullet.y + bullet.height > ufo.y) {
+                        // Remove bullet and UFO
+                        bullets.splice(bulletIndex, 1);
+                        ufos.splice(ufoIndex, 1);
+                        score += 10; // Increment score
+                    }
+                });
+            });
+
+            // Display Score
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
 
             requestAnimationFrame(update);
         }
 
+        setInterval(spawnUFO, 2000); // Spawn UFOs every 2 seconds
         update();
     </script>
 </body>
