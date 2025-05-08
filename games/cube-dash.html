@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cube Dash</title>
+    <title>Extended 2D Platformer</title>
     <style>
         canvas { background: #ddd; display: block; margin: auto; }
     </style>
@@ -21,34 +21,20 @@
             onGround: false
         };
 
-        let level = 1;
+        let platforms = [
+            { x: 20, y: 350, width: 200, height: 20 },
+            { x: 250, y: 300, width: 150, height: 20 },
+            { x: 450, y: 250, width: 100, height: 20 },
+            { x: 100, y: 200, width: 120, height: 20 },
+            { x: 300, y: 150, width: 150, height: 20 },
+            { x: 500, y: 100, width: 80, height: 20 },
+            { x: 650, y: 300, width: 120, height: 20 },
+            { x: 750, y: 250, width: 80, height: 20 },
+            { x: 900, y: 200, width: 130, height: 20 },
+            { x: 1050, y: 150, width: 140, height: 20 }
+        ];
 
-        const levelData = {
-            1: {
-                platforms: [
-                    { x: 20, y: 350, width: 200, height: 20 },
-                    { x: 250, y: 300, width: 150, height: 20 },
-                    { x: 450, y: 250, width: 100, height: 20 },
-                    { x: 100, y: 200, width: 120, height: 20 },
-                    { x: 300, y: 150, width: 150, height: 20 },
-                    { x: 500, y: 100, width: 80, height: 20 },
-                    { x: 650, y: 300, width: 120, height: 20 },
-                    { x: 750, y: 250, width: 80, height: 20 }
-                ],
-                goal: { x: 1150, y: 120, width: 30, height: 40 }
-            },
-            2: {
-                platforms: [
-                    { x: 50, y: 350, width: 200, height: 20 },
-                    { x: 300, y: 320, width: 150, height: 20 },
-                    { x: 550, y: 280, width: 120, height: 20 },
-                    { x: 800, y: 250, width: 100, height: 20 },
-                    { x: 1000, y: 220, width: 150, height: 20 },
-                    { x: 1100, y: 180, width: 80, height: 20 }
-                ],
-                goal: { x: 1150, y: 150, width: 30, height: 40 }
-            }
-        };
+        let goal = { x: 1150, y: 120, width: 30, height: 40 };
 
         function drawPlayer() {
             ctx.fillStyle = "blue";
@@ -57,13 +43,11 @@
 
         function drawPlatforms() {
             ctx.fillStyle = "green";
-            levelData[level].platforms.forEach(platform => 
-                ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
+            platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
         }
 
         function drawGoal() {
             ctx.fillStyle = "red";
-            let goal = levelData[level].goal;
             ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
         }
 
@@ -73,7 +57,7 @@
             player.y += player.velocityY;
 
             player.onGround = false;
-            levelData[level].platforms.forEach(platform => {
+            platforms.forEach(platform => {
                 if (player.y + player.height > platform.y &&
                     player.y + player.height - player.velocityY <= platform.y &&
                     player.x + player.width > platform.x &&
@@ -90,19 +74,12 @@
                 player.onGround = true;
             }
 
-            let goal = levelData[level].goal;
             if (player.x + player.width > goal.x &&
                 player.x < goal.x + goal.width &&
                 player.y + player.height > goal.y &&
                 player.y < goal.y + goal.height) {
-                if (level === 1) {
-                    alert("Level 1 Complete! Moving to Level 2!");
-                    level = 2;
-                    resetGame();
-                } else {
-                    alert("You win the game!");
-                    resetGame();
-                }
+                alert("You win!");
+                resetGame();
             }
         }
 
