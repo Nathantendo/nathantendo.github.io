@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced 2D Platformer</title>
+    <title>2D Platformer Game</title>
     <style>
         canvas { background: #ddd; display: block; margin: auto; }
     </style>
@@ -24,8 +24,13 @@
         let platforms = [
             { x: 20, y: 350, width: 200, height: 20 },
             { x: 250, y: 280, width: 150, height: 20 },
-            { x: 450, y: 220, width: 100, height: 20 }
+            { x: 450, y: 220, width: 100, height: 20 },
+            { x: 100, y: 180, width: 120, height: 20 },
+            { x: 300, y: 130, width: 150, height: 20 },
+            { x: 500, y: 80, width: 80, height: 20 }
         ];
+
+        let goal = { x: 520, y: 40, width: 20, height: 40 };
 
         function drawPlayer() {
             ctx.fillStyle = "blue";
@@ -35,6 +40,11 @@
         function drawPlatforms() {
             ctx.fillStyle = "green";
             platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
+        }
+
+        function drawGoal() {
+            ctx.fillStyle = "red";
+            ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
         }
 
         function applyPhysics() {
@@ -59,11 +69,27 @@
                 player.velocityY = 0;
                 player.onGround = true;
             }
+
+            if (player.x + player.width > goal.x &&
+                player.x < goal.x + goal.width &&
+                player.y + player.height > goal.y &&
+                player.y < goal.y + goal.height) {
+                alert("You win!");
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            player.x = 50;
+            player.y = 300;
+            player.velocityX = 0;
+            player.velocityY = 0;
         }
 
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPlatforms();
+            drawGoal();
             drawPlayer();
             applyPhysics();
             requestAnimationFrame(update);
