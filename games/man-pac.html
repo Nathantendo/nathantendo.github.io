@@ -32,16 +32,16 @@
 
         const tileSize = 25;
         let player = { x: 1, y: 1, width: tileSize, height: tileSize };
-        let enemies = [{ x: 10, y: 10, width: tileSize, height: tileSize, speed: 1 }];
+        let enemies = [{ x: 8, y: 8, width: tileSize, height: tileSize, speedX: 1, speedY: 0 }];
         let collectibles = [{ x: 4, y: 4, width: tileSize, height: tileSize }];
 
         let maze = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,0,0,0,1],
-            [1,0,1,1,0,1,0,1,1,0,1,1,0,1,1,1,1,0,0,1],
-            [1,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,0,1,0,1,1,0,1,1,1,1,0,0,1],
+            [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
             [1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1],
+            [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,1,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
@@ -103,9 +103,25 @@
             if (event.code === "ArrowRight") movePlayer(1, 0);
         });
 
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                let newX = enemy.x + enemy.speedX;
+                let newY = enemy.y + enemy.speedY;
+
+                if (maze[newY][newX] === 0) {
+                    enemy.x = newX;
+                    enemy.y = newY;
+                } else {
+                    enemy.speedX *= -1;
+                    enemy.speedY *= -1;
+                }
+            });
+        }
+
         function updateGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMaze();
+            moveEnemies();
             drawPlayer();
             drawEnemies();
             drawCollectibles();
