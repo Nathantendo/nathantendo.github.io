@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced 2D Platformer</title>
+    <style>
+        canvas { background: #ddd; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let player = {
+            x: 50, y: 300, width: 30, height: 30,
+            velocityX: 0, velocityY: 0,
+            speed: 3, gravity: 0.5, jumpPower: -10,
+            onGround: false
+        };
+
+        let platforms = [
+            { x: 20, y: 350, width: 200, height: 20 },
+            { x: 250, y: 280, width: 150, height: 20 },
+            { x: 450, y: 220, width: 100, height: 20 }
+        ];
+
+        function drawPlayer() {
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawPlatforms() {
+            ctx.fillStyle = "green";
+            platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
+        }
+
+        function applyPhysics() {
+            player.velocityY += player.gravity;
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            player.onGround = false;
+            platforms.forEach(platform => {
+                if (player.y + player.height > platform.y &&
+                    player.y + player.height - player.velocityY <= platform.y &&
+                    player.x + player.width > platform.x &&
+                    player.x < platform.x + platform.width) {
+                        player.y = platform.y - player.height;
+                        player.velocityY = 0;
+                        player.onGround = true;
+                }
+            });
+
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+                player.velocityY = 0;
+                player.onGround = true;
+            }
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlatforms();
+            drawPlayer();
+            applyPhysics();
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowRight") player.velocityX = player.speed;
+            if (event.key === "ArrowLeft") player.velocityX = -player.speed;
+            if (event.key === "ArrowUp" && player.onGround) player.velocityY = player.jumpPower;
+        });
+
+        document.addEventListener("keyup", (event) => {
+            if (event.key === "ArrowRight" || event.key === "ArrowLeft") player.velocityX = 0;
+        });
+
+        update();
+    </script>
+</body>
+</html>
