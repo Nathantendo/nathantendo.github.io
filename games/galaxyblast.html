@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaga Arcade Clone</title>
+    <style>
+        canvas { background: black; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let player = { x: canvas.width / 2, y: canvas.height - 50, width: 40, height: 40, speed: 5 };
+        let bullets = [];
+        let enemies = [];
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft" && player.x > 0) player.x -= player.speed;
+            if (event.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += player.speed;
+            if (event.key === " ") bullets.push({ x: player.x + player.width / 2, y: player.y, speed: 7 });
+        });
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw player
+            ctx.fillStyle = "white";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Move and draw bullets
+            bullets.forEach((bullet, index) => {
+                bullet.y -= bullet.speed;
+                ctx.fillStyle = "red";
+                ctx.fillRect(bullet.x, bullet.y, 5, 10);
+                if (bullet.y < 0) bullets.splice(index, 1);
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    </script>
+</body>
+</html>
