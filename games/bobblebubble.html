@@ -1,15 +1,128 @@
-<canvas id="gameCanvas"></canvas>
-<script>
-  const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Bobble Recreation</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #87CEEB;
+        }
+        canvas {
+            background-color: #000;
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
 
-  canvas.width = 800;
-  canvas.height = 600;
+    <h1>Bubble Bobble Recreation</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-  function drawPlayer(x, y) {
-    ctx.fillStyle = "blue";
-    ctx.fillRect(x, y, 40, 40);
-  }
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-  drawPlayer(100, 500);
-</script>
+        // Game variables
+        const gravity = 0.5;
+        let bubbles = [];
+        let enemies = [];
+        let score = 0;
+
+        // Player object
+        const player = {
+            x: 100,
+            y: 500,
+            width: 30,
+            height: 30,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            isOnGround: false,
+            moveLeft() { this.velocityX = -this.speed; },
+            moveRight() { this.velocityX = this.speed; },
+            jump() { if (this.isOnGround) this.velocityY = -10; }
+        };
+
+        // Event listeners for movement
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") player.moveLeft();
+            if (event.key === "ArrowRight") player.moveRight();
+            if (event.key === " ") player.jump(); // Spacebar for jumping
+            if (event.key === "z") shootBubble(); // 'Z' to shoot a bubble
+        });
+
+        document.addEventListener("keyup", () => player.velocityX = 0);
+
+        function shootBubble() {
+            let bubble = { x: player.x, y: player.y, width: 15, height: 15, velocityY: -5 };
+            bubbles.push(bubble);
+        }
+
+        function spawnEnemy() {
+            enemies.push({
+                x: Math.random() * canvas.width,
+                y: 50,
+                width: 30,
+                height: 30,
+                velocityX: Math.random() < 0.5 ? -2 : 2
+            });
+        }
+
+        setInterval(spawnEnemy, 3000); // Enemies spawn every 3 seconds
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Player physics
+            player.y += player.velocityY;
+            player.x += player.velocityX;
+            player.velocityY += gravity;
+            if (player.y > 500) {
+                player.y = 500;
+                player.isOnGround = true;
+            } else {
+                player.isOnGround = false;
+            }
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Update bubbles
+            ctx.fillStyle = "cyan";
+            bubbles.forEach((bubble, index) => {
+                bubble.y += bubble.velocityY;
+                ctx.fillRect(bubble.x, bubble.y, bubble.width, bubble.height);
+                if (bubble.y < 0) bubbles.splice(index, 1);
+            });
+
+            // Update enemies
+            ctx.fillStyle = "red";
+            enemies.forEach((enemy, index) => {
+                enemy.x += enemy.velocityX;
+                if (enemy.x < 0 || enemy.x > canvas.width) enemy.velocityX *= -1; // Bounce off walls
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+                // Check collision with bubbles
+                bubbles.forEach((bubble, bIndex) => {
+                    if (bubble.x < enemy.x + enemy.width &&
+                        bubble.x + bubble.width > enemy.x &&
+                        bubble.y < enemy.y + enemy.height &&
+                        bubble.y + bubble.height > enemy.y) {
+                        enemies.splice(index, 1);
+                        bubbles.splice(bIndex, 1);
+                        score += 100;
+                        console.log("Score:", score);
+                    }
+                });
+            });
+
+            requestAnimationFrame(updateGame);
+        }
+
+        updateGame();
+    </script>
+
+</body>
+</html>
