@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaga Arcade Clone with UFOs</title>
+    <title>Galaga Arcade Clone with Smooth Movement</title>
     <style>
         canvas { background: black; display: block; margin: auto; }
     </style>
@@ -14,24 +14,36 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let player = { x: canvas.width / 2, y: canvas.height - 50, width: 40, height: 40, speed: 5 };
+        let player = { x: canvas.width / 2, y: canvas.height - 50, width: 40, height: 40, speed: 5, dx: 0 };
         let bullets = [];
         let ufos = [];
         let score = 0;
+        let leftPressed = false;
+        let rightPressed = false;
 
         function spawnUFO() {
             ufos.push({ x: Math.random() * canvas.width, y: 50, width: 40, height: 30, speed: 2 });
         }
 
         document.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowLeft" && player.x > 0) player.x -= player.speed;
-            if (event.key === "ArrowRight" && player.x < canvas.width - player.width) player.x += player.speed;
+            if (event.key === "ArrowLeft") leftPressed = true;
+            if (event.key === "ArrowRight") rightPressed = true;
             if (event.key === " ") bullets.push({ x: player.x + player.width / 2, y: player.y, width: 5, height: 10, speed: 7 });
+        });
+
+        document.addEventListener("keyup", (event) => {
+            if (event.key === "ArrowLeft") leftPressed = false;
+            if (event.key === "ArrowRight") rightPressed = false;
         });
 
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Smooth movement
+            if (leftPressed) player.x -= player.speed;
+            if (rightPressed) player.x += player.speed;
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x)); // Keep player within bounds
+
             // Draw player
             ctx.fillStyle = "white";
             ctx.fillRect(player.x, player.y, player.width, player.height);
@@ -57,10 +69,9 @@
                         bullet.x + bullet.width > ufo.x &&
                         bullet.y < ufo.y + ufo.height &&
                         bullet.y + bullet.height > ufo.y) {
-                        // Remove bullet and UFO
                         bullets.splice(bulletIndex, 1);
                         ufos.splice(ufoIndex, 1);
-                        score += 10; // Increment score
+                        score += 10;
                     }
                 });
             });
