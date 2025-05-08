@@ -10,10 +10,7 @@
 </head>
 <body><h1>Galaxy Blast</h1>
     <div id="gameBoard"></div>
-    <p>Use Arrow Keys to Move the Starship</p>
-    <p>Shoot With the Space Bar</p>
-
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -90,6 +87,8 @@
 
         setInterval(spawnUFO, 2000); // Spawn UFOs every 2 seconds
         update();
+        <p>Use Arrow Keys to Move the Starship</p>
+    <p>Shoot With the Space Bar</p>
     </script>
 </body>
 </html>
