@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple 2D Platformer</title>
+    <title>Extended 2D Platformer</title>
     <style>
         canvas { background: #ddd; display: block; margin: auto; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <canvas id="gameCanvas" width="1200" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
@@ -29,10 +29,12 @@
             { x: 300, y: 150, width: 150, height: 20 },
             { x: 500, y: 100, width: 80, height: 20 },
             { x: 650, y: 300, width: 120, height: 20 },
-            { x: 750, y: 250, width: 80, height: 20 }
+            { x: 750, y: 250, width: 80, height: 20 },
+            { x: 900, y: 200, width: 130, height: 20 },
+            { x: 1050, y: 150, width: 140, height: 20 }
         ];
 
-        let goal = { x: 760, y: 220, width: 30, height: 40 };
+        let goal = { x: 1150, y: 120, width: 30, height: 40 };
 
         function drawPlayer() {
             ctx.fillStyle = "blue";
