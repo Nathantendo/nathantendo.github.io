@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missile Command</title>
+    <style>
+        body { text-align: center; background: black; color: white; }
+        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <h1>Missile Command</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let missiles = [];
+        let explosions = [];
+        let cities = [
+            { x: 150, y: 350, alive: true },
+            { x: 350, y: 350, alive: true },
+            { x: 550, y: 350, alive: true }
+        ];
+
+        function drawCities() {
+            ctx.fillStyle = "#00DD95";
+            cities.forEach(city => {
+                if (city.alive) ctx.fillRect(city.x, city.y, 50, 20);
+            });
+        }
+
+        function drawMissiles() {
+            ctx.fillStyle = "#FF0000";
+            missiles.forEach(m => {
+                ctx.beginPath();
+                ctx.arc(m.x, m.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawExplosions() {
+            ctx.fillStyle = "#FFFF00";
+            explosions.forEach(ex => {
+                ctx.beginPath();
+                ctx.arc(ex.x, ex.y, ex.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCities();
+            drawMissiles();
+            drawExplosions();
+
+            missiles.forEach(m => {
+                m.y += 2;
+                cities.forEach(city => {
+                    if (city.alive && m.y > city.y && Math.abs(m.x - city.x) < 25) {
+                        city.alive = false;
+                        explosions.push({ x: m.x, y: m.y, size: 30 });
+                    }
+                });
+            });
+
+            explosions.forEach(ex => {
+                ex.size += 2;
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("click", event => {
+            missiles.push({ x: event.clientX - canvas.offsetLeft, y: 0 });
+        });
+
+        update();
+    </script>
+</body>
+</html>
