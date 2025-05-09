@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Placement</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = 800;
+        canvas.height = 600;
+
+        const blockSize = 40;
+        let blocks = [];
+
+        // Function to get mouse position
+        function getMousePos(event) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: Math.floor((event.clientX - rect.left) / blockSize) * blockSize,
+                y: Math.floor((event.clientY - rect.top) / blockSize) * blockSize
+            };
+        }
+
+        // Event listener for placing blocks
+        canvas.addEventListener("click", (event) => {
+            const pos = getMousePos(event);
+            blocks.push(pos);
+            drawBlocks();
+        });
+
+        // Function to draw blocks
+        function drawBlocks() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            blocks.forEach(block => {
+                ctx.fillStyle = "brown";
+                ctx.fillRect(block.x, block.y, blockSize, blockSize);
+                ctx.strokeRect(block.x, block.y, blockSize, blockSize);
+            });
+        }
+    </script>
+</body>
+</html>
