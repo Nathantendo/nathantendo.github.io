@@ -3,125 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Man-Pac Arcade Game</title>
+    <title>Pac-Man</title>
     <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-            background: black;
-            color: white;
-        }
-        canvas {
-            display: block;
-            background: #222;
-            margin: auto;
-            border: 2px solid white;
-        }
+        body { text-align: center; background: black; color: white; }
+        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Smooth Maze Game</h1>
-    <canvas id="gameCanvas"></canvas>
-    <p>Use Arrow Keys to Move</p>
-
+    <h1>Pac-Man</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        canvas.width = 500;
-        canvas.height = 500;
 
-        const tileSize = 25;
-        let player = { x: 1, y: 1, width: tileSize, height: tileSize, speedX: 0, speedY: 0 };
-        let enemies = [{ x: 8, y: 8, width: tileSize, height: tileSize, speedX: 1, speedY: 0 }];
-        let collectibles = [{ x: 4, y: 4, width: tileSize, height: tileSize }];
-
-        let maze = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,1,0,1,0,0,1,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,0,1,0,1,1,0,1,1,1,1,0,0,1],
-            [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,1],
-            [1,0,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,1,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
-
-        document.addEventListener("keydown", (event) => {
-            if (event.code === "ArrowUp") player.speedY = -2;
-            if (event.code === "ArrowDown") player.speedY = 2;
-            if (event.code === "ArrowLeft") player.speedX = -2;
-            if (event.code === "ArrowRight") player.speedX = 2;
-        });
-
-        document.addEventListener("keyup", (event) => {
-            if (["ArrowUp", "ArrowDown"].includes(event.code)) player.speedY = 0;
-            if (["ArrowLeft", "ArrowRight"].includes(event.code)) player.speedX = 0;
-        });
-
-        function updatePlayerPosition() {
-            let newX = player.x + player.speedX / tileSize;
-            let newY = player.y + player.speedY / tileSize;
-
-            if (maze[Math.floor(newY)][Math.floor(newX)] === 0) {
-                player.x += player.speedX / tileSize;
-                player.y += player.speedY / tileSize;
-            }
-
-            collectibles.forEach((item, index) => {
-                if (Math.floor(player.x) === item.x && Math.floor(player.y) === item.y) {
-                    collectibles.splice(index, 1);
-                }
-            });
-
-            enemies.forEach(enemy => {
-                if (Math.floor(player.x) === enemy.x && Math.floor(player.y) === enemy.y) {
-                    alert("Game Over!");
-                    player.x = 1;
-                    player.y = 1;
-                }
-            });
+        let pacman = { x: 200, y: 200, size: 20, dx: 0, dy: 0 };
+        let pellets = [];
+        for (let i = 0; i < 5; i++) {
+            pellets.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 5 });
         }
 
-        function updateGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawMaze();
-            updatePlayerPosition();
-            drawPlayer();
-            drawEnemies();
-            drawCollectibles();
-            requestAnimationFrame(updateGame);
-        }
-
-        function drawMaze() {
-            for (let row = 0; row < maze.length; row++) {
-                for (let col = 0; col < maze[row].length; col++) {
-                    if (maze[row][col] === 1) {
-                        ctx.fillStyle = "blue";
-                        ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
-                    }
-                }
-            }
-        }
-
-        function drawPlayer() {
+        function drawPacman() {
             ctx.fillStyle = "yellow";
-            ctx.fillRect(player.x * tileSize, player.y * tileSize, player.width, player.height);
+            ctx.beginPath();
+            ctx.arc(pacman.x, pacman.y, pacman.size, 0.2 * Math.PI, 1.8 * Math.PI);
+            ctx.lineTo(pacman.x, pacman.y);
+            ctx.fill();
         }
 
-        function drawEnemies() {
-            ctx.fillStyle = "red";
-            enemies.forEach(enemy => {
-                ctx.fillRect(enemy.x * tileSize, enemy.y * tileSize, enemy.width, enemy.height);
+        function drawPellets() {
+            ctx.fillStyle = "white";
+            pellets.forEach(pellet => {
+                ctx.beginPath();
+                ctx.arc(pellet.x, pellet.y, pellet.size, 0, Math.PI * 2);
+                ctx.fill();
             });
         }
 
-        function drawCollectibles() {
-            ctx.fillStyle = "gold";
-            collectibles.forEach(item => {
-                ctx.fillRect(item.x * tileSize, item.y * tileSize, item.width, item.height);
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPacman();
+            drawPellets();
+
+            pacman.x += pacman.dx;
+            pacman.y += pacman.dy;
+
+            pellets = pellets.filter(pellet => {
+                let distance = Math.hypot(pacman.x - pellet.x, pacman.y - pellet.y);
+                return distance > pacman.size;
             });
+
+            requestAnimationFrame(update);
         }
 
-        updateGame();
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowUp") { pacman.dy = -2; pacman.dx = 0; }
+            if (e.key === "ArrowDown") { pacman.dy = 2; pacman.dx = 0; }
+            if (e.key === "ArrowLeft") { pacman.dx = -2; pacman.dy = 0; }
+            if (e.key === "ArrowRight") { pacman.dx = 2; pacman.dy = 0; }
+        });
+
+        update();
     </script>
 </body>
 </html>
