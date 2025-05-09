@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frogger</title>
+    <title>Frogger Enhanced</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Frogger</h1>
+    <h1>Frogger Enhanced</h1>
     <canvas id="gameCanvas" width="800" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -19,8 +19,10 @@
         let frog = { x: 400, y: 380, width: 20, height: 20 };
         let cars = [];
 
+        // Add lower and upper layers of cars
         for (let i = 0; i < 5; i++) {
-            cars.push({ x: i * 150, y: 300, width: 40, height: 20, speed: 2 });
+            cars.push({ x: i * 150, y: 300, width: 40, height: 20, speed: 2 }); // Lower layer
+            cars.push({ x: i * 120, y: 250, width: 40, height: 20, speed: -2 }); // Upper layer, moving in opposite direction
         }
 
         function drawFrog() {
@@ -43,11 +45,12 @@
             cars.forEach(car => {
                 car.x += car.speed;
                 if (car.x > canvas.width) car.x = -50;
+                if (car.x < -50) car.x = canvas.width;
 
                 if (frog.y < car.y + car.height && frog.y + frog.height > car.y &&
                     frog.x < car.x + car.width && frog.x + frog.width > car.x) {
                     frog.x = 400;
-                    frog.y = 380;
+                    frog.y = 380; // Reset frog position on collision
                 }
             });
 
