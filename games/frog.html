@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frogger</title>
+    <style>
+        body { text-align: center; background: black; color: white; }
+        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <h1>Frogger</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let frog = { x: 400, y: 380, width: 20, height: 20 };
+        let cars = [];
+
+        for (let i = 0; i < 5; i++) {
+            cars.push({ x: i * 150, y: 300, width: 40, height: 20, speed: 2 });
+        }
+
+        function drawFrog() {
+            ctx.fillStyle = "#00DD95";
+            ctx.fillRect(frog.x, frog.y, frog.width, frog.height);
+        }
+
+        function drawCars() {
+            ctx.fillStyle = "#FF5733";
+            cars.forEach(car => {
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawFrog();
+            drawCars();
+
+            cars.forEach(car => {
+                car.x += car.speed;
+                if (car.x > canvas.width) car.x = -50;
+
+                if (frog.y < car.y + car.height && frog.y + frog.height > car.y &&
+                    frog.x < car.x + car.width && frog.x + frog.width > car.x) {
+                    frog.x = 400;
+                    frog.y = 380;
+                }
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowUp") frog.y -= 20;
+            if (e.key === "ArrowDown") frog.y += 20;
+            if (e.key === "ArrowLeft") frog.x -= 20;
+            if (e.key === "ArrowRight") frog.x += 20;
+        });
+
+        update();
+    </script>
+</body>
+</html>
