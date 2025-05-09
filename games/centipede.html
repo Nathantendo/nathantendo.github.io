@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centipede</title>
+    <style>
+        body { text-align: center; background: black; color: white; }
+        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <h1>Centipede</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let shooter = { x: 400, y: 380, width: 20, height: 20 };
+        let bullets = [];
+        let centipede = [];
+
+        for (let i = 0; i < 10; i++) {
+            centipede.push({ x: i * 40, y: 50, dx: 2, alive: true });
+        }
+
+        function drawShooter() {
+            ctx.fillStyle = "#00DD95";
+            ctx.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+        }
+
+        function drawCentipede() {
+            ctx.fillStyle = "#FF5733";
+            centipede.forEach(segment => {
+                if (segment.alive) ctx.fillRect(segment.x, segment.y, 20, 20);
+            });
+        }
+
+        function drawBullets() {
+            ctx.fillStyle = "#FFFF00";
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x, bullet.y, 5, 10);
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawShooter();
+            drawCentipede();
+            drawBullets();
+
+            bullets.forEach(bullet => {
+                bullet.y -= 5;
+                centipede.forEach(segment => {
+                    if (segment.alive && bullet.y < segment.y + 20 && Math.abs(bullet.x - segment.x) < 15) {
+                        segment.alive = false;
+                        bullet.y = -10;
+                    }
+                });
+            });
+
+            centipede.forEach(segment => {
+                segment.x += segment.dx;
+                if (segment.x < 0 || segment.x > canvas.width - 20) segment.dx *= -1;
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") shooter.x -= 10;
+            if (e.key === "ArrowRight") shooter.x += 10;
+            if (e.key === " ") bullets.push({ x: shooter.x + 7, y: shooter.y });
+        });
+
+        update();
+    </script>
+</body>
+</html>
