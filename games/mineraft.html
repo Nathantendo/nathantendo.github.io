@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Placement</title>
+    <title>2D Mine-raft</title>
     <style>
         canvas {
-            border: 1px solid black;
+            border: 2px solid black;
+            background-color: lightblue;
         }
     </style>
 </head>
@@ -20,33 +21,44 @@
         canvas.height = 600;
 
         const blockSize = 40;
+        const player = { x: 200, y: 200, size: blockSize };
         let blocks = [];
 
-        // Function to get mouse position
-        function getMousePos(event) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: Math.floor((event.clientX - rect.left) / blockSize) * blockSize,
-                y: Math.floor((event.clientY - rect.top) / blockSize) * blockSize
-            };
-        }
-
-        // Event listener for placing blocks
-        canvas.addEventListener("click", (event) => {
-            const pos = getMousePos(event);
-            blocks.push(pos);
-            drawBlocks();
-        });
-
-        // Function to draw blocks
-        function drawBlocks() {
+        // Draw function
+        function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw blocks
             blocks.forEach(block => {
                 ctx.fillStyle = "brown";
                 ctx.fillRect(block.x, block.y, blockSize, blockSize);
                 ctx.strokeRect(block.x, block.y, blockSize, blockSize);
             });
+
+            // Draw player
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.size, player.size);
         }
+
+        // Movement controls
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") player.x -= blockSize;
+            if (event.key === "ArrowRight") player.x += blockSize;
+            if (event.key === "ArrowUp") player.y -= blockSize;
+            if (event.key === "ArrowDown") player.y += blockSize;
+            draw();
+        });
+
+        // Block placement
+        canvas.addEventListener("click", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / blockSize) * blockSize;
+            const y = Math.floor((event.clientY - rect.top) / blockSize) * blockSize;
+            blocks.push({ x, y });
+            draw();
+        });
+
+        draw();
     </script>
 </body>
 </html>
