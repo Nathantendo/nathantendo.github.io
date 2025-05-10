@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NES Runner</title>
+  <style>
+    canvas { background: lightblue; display: block; margin: auto; }
+    body { text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="300"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    let playerY = 220, velocity = 0, gravity = 0.5;
+    let obstacleX = canvas.width, obstacleHeight = 40;
+    
+    document.addEventListener("keydown", () => { if (playerY >= 220) velocity = -10; });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function updateGame() {
+      velocity += gravity;
+      playerY += velocity;
+      if (playerY > 220) playerY = 220; // Keep player on ground
+
+      obstacleX -= 5;
+      if (obstacleX < -20) obstacleX = canvas.width + Math.random() * 50;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawRect(50, playerY, 30, 30, "red"); // Player
+      drawRect(obstacleX, 250, 20, obstacleHeight, "green"); // Obstacle
+
+      requestAnimationFrame(updateGame);
+    }
+
+    updateGame(); // Start the loop
+  </script>
+</body>
+</html>
