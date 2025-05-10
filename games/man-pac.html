@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Man-Pac</title>
+    <title>Pac-Man Classic Maze</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Man-Pac Arcade Game</h1>
+    <h1>Pac-Man Classic Maze</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let pacman = { x: 50, y: 50, size: 20, dx: 0, dy: 0 };
+        let pacman = { x: 40, y: 40, size: 20, dx: 0, dy: 0 };
         let pellets = [];
         let maze = [
-            { x: 100, y: 50, width: 200, height: 20 },
-            { x: 50, y: 100, width: 20, height: 200 },
-            { x: 300, y: 100, width: 20, height: 200 },
-            { x: 100, y: 300, width: 200, height: 20 }
+            { x: 40, y: 40, width: 320, height: 20 }, { x: 40, y: 340, width: 320, height: 20 },
+            { x: 40, y: 40, width: 20, height: 320 }, { x: 340, y: 40, width: 20, height: 320 },
+            { x: 100, y: 100, width: 40, height: 100 }, { x: 200, y: 100, width: 40, height: 100 },
+            { x: 300, y: 100, width: 40, height: 100 }, { x: 150, y: 250, width: 100, height: 40 }
         ];
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
             pellets.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 5 });
         }
 
