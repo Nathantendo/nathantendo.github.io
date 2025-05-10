@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Runner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #game-container {
+            position: relative;
+            width: 600px;
+            height: 200px;
+            border: 2px solid black;
+            margin: auto;
+            overflow: hidden;
+            background-color: white;
+        }
+        #dino {
+            width: 50px;
+            height: 50px;
+            background-color: green;
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+        }
+        #obstacle {
+            width: 20px;
+            height: 40px;
+            background-color: red;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dino Runner</h1>
+    <p>Press Space to Jump!</p>
+    <div id="game-container">
+        <div id="dino"></div>
+        <div id="obstacle"></div>
+    </div>
+    <script>
+        let dino = document.getElementById("dino");
+        let obstacle = document.getElementById("obstacle");
+        let isJumping = false;
+
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space" && !isJumping) {
+                jump();
+            }
+        });
+
+        function jump() {
+            isJumping = true;
+            let position = 0;
+            let upInterval = setInterval(() => {
+                if (position >= 100) {
+                    clearInterval(upInterval);
+                    let downInterval = setInterval(() => {
+                        if (position <= 0) {
+                            clearInterval(downInterval);
+                            isJumping = false;
+                        } else {
+                            position -= 5;
+                            dino.style.bottom = position + "px";
+                        }
+                    }, 20);
+                } else {
+                    position += 5;
+                    dino.style.bottom = position + "px";
+                }
+            }, 20);
+        }
+
+        function moveObstacle() {
+            let obstaclePosition = 600;
+            let moveInterval = setInterval(() => {
+                if (obstaclePosition <= 0) {
+                    obstaclePosition = 600;
+                }
+                obstaclePosition -= 5;
+                obstacle.style.right = obstaclePosition + "px";
+            }, 20);
+        }
+
+        moveObstacle();
+    </script>
+</body>
+</html>
