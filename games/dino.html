@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
             background-image: url('dino.png'); /* Replace with actual dino sprite */
             background-size: cover;
             position: absolute;
-            bottom: 0;
+            bottom: 10px; /* Fix: Properly aligns with the ground */
             left: 50px;
         }
         #obstacle {
@@ -36,9 +36,6 @@
             position: absolute;
             bottom: 0;
             right: 0;
-        }
-        #score {
-            font-size: 20px;
         }
     </style>
 </head>
@@ -58,7 +55,7 @@
         let scoreDisplay = document.getElementById("score");
         let jumpSound = document.getElementById("jump-sound");
         let collisionSound = document.getElementById("collision-sound");
-        
+
         let isJumping = false;
         let gravity = 0.5;
         let velocity = 0;
@@ -75,9 +72,9 @@
 
         function update() {
             if (isJumping) {
-                dino.style.bottom = Math.max(0, parseInt(dino.style.bottom) + velocity) + "px";
+                dino.style.bottom = Math.max(10, parseInt(dino.style.bottom) + velocity) + "px"; // Fix: Lands back at 10px
                 velocity += gravity;
-                if (parseInt(dino.style.bottom) <= 0) {
+                if (parseInt(dino.style.bottom) <= 10) {
                     isJumping = false;
                 }
             }
@@ -105,7 +102,7 @@
             requestAnimationFrame(update);
         }
 
-        dino.style.bottom = "0px";
+        dino.style.bottom = "10px"; // Fix: Start at correct position
         obstacle.style.right = "800px";
         update();
     </script>
