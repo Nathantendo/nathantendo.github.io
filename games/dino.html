@@ -25,7 +25,7 @@
             background-image: url('dino.png'); /* Replace with actual dino sprite */
             background-size: cover;
             position: absolute;
-            bottom: 10px; /* Fix: Properly aligns with the ground */
+            bottom: 10px; /* Fixes ground alignment */
             left: 50px;
         }
         #obstacle {
@@ -57,25 +57,29 @@
         let collisionSound = document.getElementById("collision-sound");
 
         let isJumping = false;
-        let gravity = 0.5;
+        let gravity = 0.6;
         let velocity = 0;
+        let jumpStrength = -12;
+        let groundLevel = 10;
         let gameSpeed = 5;
         let score = 0;
 
         document.addEventListener("keydown", function(event) {
             if (event.code === "Space" && !isJumping) {
                 jumpSound.play();
-                velocity = -10;
+                velocity = jumpStrength;
                 isJumping = true;
             }
         });
 
         function update() {
             if (isJumping) {
-                dino.style.bottom = Math.max(10, parseInt(dino.style.bottom) + velocity) + "px"; // Fix: Lands back at 10px
                 velocity += gravity;
-                if (parseInt(dino.style.bottom) <= 10) {
+                dino.style.bottom = Math.max(groundLevel, parseInt(dino.style.bottom) + velocity) + "px";
+
+                if (parseInt(dino.style.bottom) <= groundLevel) {
                     isJumping = false;
+                    velocity = 0;
                 }
             }
 
@@ -86,7 +90,7 @@
                 score++;
                 scoreDisplay.innerText = "Score: " + score;
                 if (score % 10 === 0) {
-                    gameSpeed += 1; // Increase difficulty
+                    gameSpeed += 1;
                 }
             } else {
                 obstacle.style.right = obstaclePosition + "px";
@@ -102,7 +106,7 @@
             requestAnimationFrame(update);
         }
 
-        dino.style.bottom = "10px"; // Fix: Start at correct position
+        dino.style.bottom = groundLevel + "px";
         obstacle.style.right = "800px";
         update();
     </script>
