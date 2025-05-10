@@ -19,12 +19,12 @@
         let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, isJumping: false };
         let obstacles = [];
         let score = 0;
-        let gravity = 1.5;
+        let gravity = 1;
         let speed = 5;
 
         document.addEventListener("keydown", (event) => {
             if (event.key === " " && !dino.isJumping) {
-                dino.dy = -15;
+                dino.dy = -18;
                 dino.isJumping = true;
             }
         });
