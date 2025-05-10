@@ -1,17 +1,18 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dino Runner</title>
+    <title>Chrome Dino Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            background-color: white;
         }
         #game-container {
             position: relative;
-            width: 600px;
+            width: 800px;
             height: 200px;
             border: 2px solid black;
             margin: auto;
@@ -21,73 +22,92 @@
         #dino {
             width: 50px;
             height: 50px;
-            background-color: green;
+            background-image: url('dino.png'); /* Replace with actual dino sprite */
+            background-size: cover;
             position: absolute;
             bottom: 0;
             left: 50px;
         }
         #obstacle {
-            width: 20px;
+            width: 30px;
             height: 40px;
-            background-color: red;
+            background-image: url('cactus.png'); /* Replace with actual obstacle sprite */
+            background-size: cover;
             position: absolute;
             bottom: 0;
             right: 0;
         }
+        #score {
+            font-size: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Dino Runner</h1>
+    <h1>Chrome Dino Game</h1>
     <p>Press Space to Jump!</p>
+    <div id="score">Score: 0</div>
     <div id="game-container">
         <div id="dino"></div>
         <div id="obstacle"></div>
     </div>
+    <audio id="jump-sound" src="jump.mp3"></audio> <!-- Replace with actual sound -->
+    <audio id="collision-sound" src="collision.mp3"></audio> <!-- Replace with actual sound -->
     <script>
         let dino = document.getElementById("dino");
         let obstacle = document.getElementById("obstacle");
+        let scoreDisplay = document.getElementById("score");
+        let jumpSound = document.getElementById("jump-sound");
+        let collisionSound = document.getElementById("collision-sound");
+        
         let isJumping = false;
+        let gravity = 0.5;
+        let velocity = 0;
+        let gameSpeed = 5;
+        let score = 0;
 
         document.addEventListener("keydown", function(event) {
             if (event.code === "Space" && !isJumping) {
-                jump();
+                jumpSound.play();
+                velocity = -10;
+                isJumping = true;
             }
         });
 
-        function jump() {
-            isJumping = true;
-            let position = 0;
-            let upInterval = setInterval(() => {
-                if (position >= 100) {
-                    clearInterval(upInterval);
-                    let downInterval = setInterval(() => {
-                        if (position <= 0) {
-                            clearInterval(downInterval);
-                            isJumping = false;
-                        } else {
-                            position -= 5;
-                            dino.style.bottom = position + "px";
-                        }
-                    }, 20);
-                } else {
-                    position += 5;
-                    dino.style.bottom = position + "px";
+        function update() {
+            if (isJumping) {
+                dino.style.bottom = Math.max(0, parseInt(dino.style.bottom) + velocity) + "px";
+                velocity += gravity;
+                if (parseInt(dino.style.bottom) <= 0) {
+                    isJumping = false;
                 }
-            }, 20);
-        }
+            }
 
-        function moveObstacle() {
-            let obstaclePosition = 600;
-            let moveInterval = setInterval(() => {
-                if (obstaclePosition <= 0) {
-                    obstaclePosition = 600;
+            // Move obstacle
+            let obstaclePosition = parseInt(obstacle.style.right) - gameSpeed;
+            if (obstaclePosition <= -30) {
+                obstacle.style.right = "800px";
+                score++;
+                scoreDisplay.innerText = "Score: " + score;
+                if (score % 10 === 0) {
+                    gameSpeed += 1; // Increase difficulty
                 }
-                obstaclePosition -= 5;
+            } else {
                 obstacle.style.right = obstaclePosition + "px";
-            }, 20);
+            }
+
+            // Collision Detection
+            if (parseInt(obstacle.style.right) < 80 && parseInt(dino.style.bottom) < 40) {
+                collisionSound.play();
+                alert("Game Over! Your Score: " + score);
+                window.location.reload();
+            }
+
+            requestAnimationFrame(update);
         }
 
-        moveObstacle();
+        dino.style.bottom = "0px";
+        obstacle.style.right = "800px";
+        update();
     </script>
 </body>
 </html>
