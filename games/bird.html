@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flappy Bird Clone</title>
+  <style>
+    canvas { background: skyblue; display: block; margin: auto; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    let birdY = 200, velocity = 0, gravity = 0.5;
+    let pipeX = canvas.width, pipeHeight = Math.random() * 200 + 50;
+    
+    document.addEventListener("keydown", () => { velocity = -8; });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function updateGame() {
+      velocity += gravity;
+      birdY += velocity;
+      pipeX -= 3;
+
+      if (pipeX < -50) {
+        pipeX = canvas.width;
+        pipeHeight = Math.random() * 200 + 50;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawRect(50, birdY, 30, 30, "yellow"); // Bird
+      drawRect(pipeX, 0, 50, pipeHeight, "green"); // Top Pipe
+      drawRect(pipeX, pipeHeight + 120, 50, canvas.height - pipeHeight - 120, "green"); // Bottom Pipe
+
+      requestAnimationFrame(updateGame);
+    }
+
+    updateGame(); // Start the game loop
+  </script>
+</body>
+</html>
