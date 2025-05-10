@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man Classic Maze</title>
+    <title>Pac-Man Classic</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Pac-Man Classic Maze</h1>
+    <h1>Pac-Man Classic</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let pacman = { x: 40, y: 40, size: 20, dx: 0, dy: 0 };
+        let pacman = { x: 60, y: 60, size: 20, dx: 0, dy: 0 };
         let pellets = [];
         let maze = [
             { x: 40, y: 40, width: 320, height: 20 }, { x: 40, y: 340, width: 320, height: 20 },
@@ -26,7 +26,9 @@
         ];
 
         for (let i = 0; i < 10; i++) {
-            pellets.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 5 });
+            let pelletX = 60 + (i * 30) % 300;
+            let pelletY = 70 + ((i * 20) % 300);
+            pellets.push({ x: pelletX, y: pelletY, size: 5 });
         }
 
         function drawPacman() {
@@ -74,6 +76,9 @@
             if (!checkCollision(newX, newY)) {
                 pacman.x = newX;
                 pacman.y = newY;
+            } else {
+                pacman.dx = 0;
+                pacman.dy = 0;
             }
 
             pellets = pellets.filter(pellet => {
@@ -85,10 +90,20 @@
         }
 
         document.addEventListener("keydown", e => {
-            if (e.key === "ArrowUp") { pacman.dy = -2; pacman.dx = 0; }
-            if (e.key === "ArrowDown") { pacman.dy = 2; pacman.dx = 0; }
-            if (e.key === "ArrowLeft") { pacman.dx = -2; pacman.dy = 0; }
-            if (e.key === "ArrowRight") { pacman.dx = 2; pacman.dy = 0; }
+            let newDX = 0, newDY = 0;
+
+            if (e.key === "ArrowUp") newDY = -2;
+            if (e.key === "ArrowDown") newDY = 2;
+            if (e.key === "ArrowLeft") newDX = -2;
+            if (e.key === "ArrowRight") newDX = 2;
+
+            let testX = pacman.x + newDX;
+            let testY = pacman.y + newDY;
+
+            if (!checkCollision(testX, testY)) {
+                pacman.dx = newDX;
+                pacman.dy = newDY;
+            }
         });
 
         update();
