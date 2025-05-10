@@ -3,112 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrome Dino Game</title>
+    <title>Dino Game</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: white;
-        }
-        #game-container {
-            position: relative;
-            width: 800px;
-            height: 200px;
-            border: 2px solid black;
-            margin: auto;
-            overflow: hidden;
-            background-color: white;
-        }
-        #dino {
-            width: 50px;
-            height: 50px;
-            background-image: url('dino.png'); /* Replace with actual dino sprite */
-            background-size: cover;
-            position: absolute;
-            bottom: 10px; /* Fixes ground alignment */
-            left: 50px;
-        }
-        #obstacle {
-            width: 30px;
-            height: 40px;
-            background-image: url('cactus.png'); /* Replace with actual obstacle sprite */
-            background-size: cover;
-            position: absolute;
-            bottom: 0;
-            right: 0;
-        }
+        body { text-align: center; font-family: Arial, sans-serif; }
+        #gameCanvas { border: 2px solid black; }
     </style>
 </head>
 <body>
     <h1>Chrome Dino Game</h1>
-    <p>Press Space to Jump!</p>
-    <div id="score">Score: 0</div>
-    <div id="game-container">
-        <div id="dino"></div>
-        <div id="obstacle"></div>
-    </div>
-    <audio id="jump-sound" src="jump.mp3"></audio> <!-- Replace with actual sound -->
-    <audio id="collision-sound" src="collision.mp3"></audio> <!-- Replace with actual sound -->
+    <canvas id="gameCanvas" width="800" height="200"></canvas>
     <script>
-        let dino = document.getElementById("dino");
-        let obstacle = document.getElementById("obstacle");
-        let scoreDisplay = document.getElementById("score");
-        let jumpSound = document.getElementById("jump-sound");
-        let collisionSound = document.getElementById("collision-sound");
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
 
-        let isJumping = false;
-        let gravity = 0.6;
-        let velocity = 0;
-        let jumpStrength = -12;
-        let groundLevel = 10;
-        let gameSpeed = 5;
+        let dino = { x: 50, y: 150, width: 20, height: 20, dy: 0, isJumping: false };
+        let obstacles = [];
         let score = 0;
+        let gravity = 1.5;
+        let speed = 5;
 
-        document.addEventListener("keydown", function(event) {
-            if (event.code === "Space" && !isJumping) {
-                jumpSound.play();
-                velocity = jumpStrength;
-                isJumping = true;
+        document.addEventListener("keydown", (event) => {
+            if (event.key === " " && !dino.isJumping) {
+                dino.dy = -15;
+                dino.isJumping = true;
             }
         });
 
         function update() {
-            if (isJumping) {
-                velocity += gravity;
-                dino.style.bottom = Math.max(groundLevel, parseInt(dino.style.bottom) + velocity) + "px";
+            dino.dy += gravity;
+            dino.y += dino.dy;
+            if (dino.y >= 150) {
+                dino.y = 150;
+                dino.dy = 0;
+                dino.isJumping = false;
+            }
 
-                if (parseInt(dino.style.bottom) <= groundLevel) {
-                    isJumping = false;
-                    velocity = 0;
+            if (Math.random() < 0.02) {
+                obstacles.push({ x: 800, y: 150, width: 20, height: 20 });
+            }
+
+            obstacles.forEach((obs) => obs.x -= speed);
+            obstacles = obstacles.filter((obs) => obs.x > 0);
+
+            obstacles.forEach((obs) => {
+                if (dino.x < obs.x + obs.width && dino.x + dino.width > obs.x &&
+                    dino.y < obs.y + obs.height && dino.y + dino.height > obs.y) {
+                    alert("Game Over! Your score: " + score);
+                    obstacles = [];
+                    score = 0;
                 }
-            }
+            });
 
-            // Move obstacle
-            let obstaclePosition = parseInt(obstacle.style.right) - gameSpeed;
-            if (obstaclePosition <= -30) {
-                obstacle.style.right = "800px";
-                score++;
-                scoreDisplay.innerText = "Score: " + score;
-                if (score % 10 === 0) {
-                    gameSpeed += 1;
-                }
-            } else {
-                obstacle.style.right = obstaclePosition + "px";
-            }
-
-            // Collision Detection
-            if (parseInt(obstacle.style.right) < 80 && parseInt(dino.style.bottom) < 40) {
-                collisionSound.play();
-                alert("Game Over! Your Score: " + score);
-                window.location.reload();
-            }
-
-            requestAnimationFrame(update);
+            score++;
         }
 
-        dino.style.bottom = groundLevel + "px";
-        obstacle.style.right = "800px";
-        update();
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            obstacles.forEach((obs) => ctx.fillRect(obs.x, obs.y, obs.width, obs.height));
+            ctx.fillText("Score: " + score, 10, 20);
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
     </script>
 </body>
 </html>
