@@ -11,13 +11,22 @@
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    
+
     let birdX = 50, birdY = 200, birdWidth = 30, birdHeight = 30;
     let velocity = 0, gravity = 0.5;
     let pipeX = canvas.width, pipeWidth = 50;
     let pipeHeight = Math.random() * 200 + 50;
-    
-    document.addEventListener("keydown", () => { velocity = -8; });
+    let gameRunning = true;
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === " ") {
+        if (gameRunning) {
+          velocity = -8;
+        } else {
+          resetGame();
+        }
+      }
+    });
 
     function drawRect(x, y, width, height, color) {
       ctx.fillStyle = color;
@@ -42,7 +51,18 @@
       return false;
     }
 
+    function resetGame() {
+      birdY = 200;
+      velocity = 0;
+      pipeX = canvas.width;
+      pipeHeight = Math.random() * 200 + 50;
+      gameRunning = true;
+      updateGame();
+    }
+
     function updateGame() {
+      if (!gameRunning) return;
+
       velocity += gravity;
       birdY += velocity;
       pipeX -= 3;
@@ -54,19 +74,4 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawRect(birdX, birdY, birdWidth, birdHeight, "yellow"); // Bird
-      drawRect(pipeX, 0, pipeWidth, pipeHeight, "green"); // Top Pipe
-      drawRect(pipeX, pipeHeight + 120, pipeWidth, canvas.height - pipeHeight - 120, "green"); // Bottom Pipe
-      
-      // Collision detection
-      if (checkCollision()) {
-        alert("Game Over!");
-        return; // Stop the game loop
-      }
-
-      requestAnimationFrame(updateGame);
-    }
-
-    updateGame(); // Start the game loop
-  </script>
-</body>
-</html>
+      drawRect(pipeX, 0, pipeWidth,
