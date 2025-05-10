@@ -12,8 +12,10 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     
-    let birdY = 200, velocity = 0, gravity = 0.5;
-    let pipeX = canvas.width, pipeHeight = Math.random() * 200 + 50;
+    let birdX = 50, birdY = 200, birdWidth = 30, birdHeight = 30;
+    let velocity = 0, gravity = 0.5;
+    let pipeX = canvas.width, pipeWidth = 50;
+    let pipeHeight = Math.random() * 200 + 50;
     
     document.addEventListener("keydown", () => { velocity = -8; });
 
@@ -22,20 +24,44 @@
       ctx.fillRect(x, y, width, height);
     }
 
+    function checkCollision() {
+      // Check collision with top pipe
+      if (birdX < pipeX + pipeWidth &&
+          birdX + birdWidth > pipeX &&
+          birdY < pipeHeight) {
+        return true;
+      }
+      
+      // Check collision with bottom pipe
+      if (birdX < pipeX + pipeWidth &&
+          birdX + birdWidth > pipeX &&
+          birdY + birdHeight > pipeHeight + 120) {
+        return true;
+      }
+
+      return false;
+    }
+
     function updateGame() {
       velocity += gravity;
       birdY += velocity;
       pipeX -= 3;
 
-      if (pipeX < -50) {
+      if (pipeX < -pipeWidth) {
         pipeX = canvas.width;
         pipeHeight = Math.random() * 200 + 50;
       }
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawRect(50, birdY, 30, 30, "yellow"); // Bird
-      drawRect(pipeX, 0, 50, pipeHeight, "green"); // Top Pipe
-      drawRect(pipeX, pipeHeight + 120, 50, canvas.height - pipeHeight - 120, "green"); // Bottom Pipe
+      drawRect(birdX, birdY, birdWidth, birdHeight, "yellow"); // Bird
+      drawRect(pipeX, 0, pipeWidth, pipeHeight, "green"); // Top Pipe
+      drawRect(pipeX, pipeHeight + 120, pipeWidth, canvas.height - pipeHeight - 120, "green"); // Bottom Pipe
+      
+      // Collision detection
+      if (checkCollision()) {
+        alert("Game Over!");
+        return; // Stop the game loop
+      }
 
       requestAnimationFrame(updateGame);
     }
