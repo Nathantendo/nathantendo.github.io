@@ -3,43 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man Classic Maze</title>
+    <title>Pac-Man with Ghosts</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Pac-Man Classic Maze</h1>
+    <h1>Pac-Man with Ghosts</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let pacman = { x: 40, y: 40, size: 20, dx: 0, dy: 0 };
+        let pacman = { x: 60, y: 60, size: 20, dx: 0, dy: 0 };
         let ghosts = [
-            { x: 180, y: 180, size: 20, dx: 2, dy: 0, color: "red" },
-            { x: 220, y: 180, size: 20, dx: -2, dy: 0, color: "pink" }
+            { x: 300, y: 100, size: 20, dx: 2, dy: 0, color: "red" },
+            { x: 100, y: 250, size: 20, dx: -2, dy: 0, color: "pink" },
+            { x: 200, y: 150, size: 20, dx: 0, dy: 2, color: "cyan" },
+            { x: 250, y: 300, size: 20, dx: 0, dy: -2, color: "orange" }
         ];
-        let pellets = [];
         let maze = [
-            // Outer walls
-            { x: 20, y: 20, width: 360, height: 20 }, { x: 20, y: 360, width: 360, height: 20 },
-            { x: 20, y: 20, width: 20, height: 360 }, { x: 360, y: 20, width: 20, height: 360 },
-            
-            // Inner pathways
+            { x: 40, y: 40, width: 320, height: 20 }, { x: 40, y: 340, width: 320, height: 20 },
+            { x: 40, y: 40, width: 20, height: 320 }, { x: 340, y: 40, width: 20, height: 320 },
             { x: 100, y: 100, width: 40, height: 100 }, { x: 200, y: 100, width: 40, height: 100 },
-            { x: 300, y: 100, width: 40, height: 100 }, { x: 150, y: 250, width: 100, height: 40 },
-
-            // Ghost house walls
-            { x: 160, y: 160, width: 80, height: 20 }, { x: 160, y: 200, width: 80, height: 20 }
+            { x: 300, y: 100, width: 40, height: 100 }, { x: 150, y: 250, width: 100, height: 40 }
         ];
-
-        for (let i = 0; i < 15; i++) {
-            let pelletX = 40 + (i * 20) % 340;
-            let pelletY = 40 + ((i * 30) % 320);
-            pellets.push({ x: pelletX, y: pelletY, size: 5 });
-        }
 
         function drawPacman() {
             ctx.fillStyle = "yellow";
@@ -49,11 +38,11 @@
             ctx.fill();
         }
 
-        function drawPellets() {
-            ctx.fillStyle = "white";
-            pellets.forEach(pellet => {
+        function drawGhosts() {
+            ghosts.forEach(ghost => {
+                ctx.fillStyle = ghost.color;
                 ctx.beginPath();
-                ctx.arc(pellet.x, pellet.y, pellet.size, 0, Math.PI * 2);
+                ctx.arc(ghost.x, ghost.y, ghost.size, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
@@ -62,15 +51,6 @@
             ctx.fillStyle = "blue";
             maze.forEach(wall => {
                 ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
-            });
-        }
-
-        function drawGhosts() {
-            ghosts.forEach(ghost => {
-                ctx.fillStyle = ghost.color;
-                ctx.beginPath();
-                ctx.arc(ghost.x, ghost.y, ghost.size, 0, Math.PI * 2);
-                ctx.fill();
             });
         }
 
@@ -87,7 +67,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawMaze();
             drawPacman();
-            drawPellets();
             drawGhosts();
 
             let newX = pacman.x + pacman.dx;
@@ -113,11 +92,11 @@
                     ghost.dy *= -1;
                 }
 
-                // Reset Pac-Man if touched by ghost
+                // If Pac-Man touches a ghost, reset position
                 let distance = Math.hypot(pacman.x - ghost.x, pacman.y - ghost.y);
                 if (distance < pacman.size) {
-                    pacman.x = 40;
-                    pacman.y = 40;
+                    pacman.x = 60;
+                    pacman.y = 60;
                 }
             });
 
