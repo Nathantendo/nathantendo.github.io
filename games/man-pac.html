@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man</title>
+    <title>Man-Pac</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Pac-Man</h1>
+    <h1>Man-Pac Arcade Game</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let pacman = { x: 200, y: 200, size: 20, dx: 0, dy: 0 };
+        let pacman = { x: 50, y: 50, size: 20, dx: 0, dy: 0 };
         let pellets = [];
+        let maze = [
+            { x: 100, y: 50, width: 200, height: 20 },
+            { x: 50, y: 100, width: 20, height: 200 },
+            { x: 300, y: 100, width: 20, height: 200 },
+            { x: 100, y: 300, width: 200, height: 20 }
+        ];
+
         for (let i = 0; i < 5; i++) {
             pellets.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: 5 });
         }
@@ -39,13 +46,35 @@
             });
         }
 
+        function drawMaze() {
+            ctx.fillStyle = "blue";
+            maze.forEach(wall => {
+                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+            });
+        }
+
+        function checkCollision(newX, newY) {
+            return maze.some(wall =>
+                newX < wall.x + wall.width &&
+                newX + pacman.size > wall.x &&
+                newY < wall.y + wall.height &&
+                newY + pacman.size > wall.y
+            );
+        }
+
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMaze();
             drawPacman();
             drawPellets();
 
-            pacman.x += pacman.dx;
-            pacman.y += pacman.dy;
+            let newX = pacman.x + pacman.dx;
+            let newY = pacman.y + pacman.dy;
+
+            if (!checkCollision(newX, newY)) {
+                pacman.x = newX;
+                pacman.y = newY;
+            }
 
             pellets = pellets.filter(pellet => {
                 let distance = Math.hypot(pacman.x - pellet.x, pacman.y - pellet.y);
