@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>N64 Racing Game</title>
+  <style>
+    canvas { background: gray; display: block; margin: auto; }
+    body { text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let carX = 250, speed = 5;
+    let roadY = 0;
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" && carX > 100) carX -= 10;
+      if (event.key === "ArrowRight" && carX < 400) carX += 10;
+    });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function updateGame() {
+      roadY += speed;
+      if (roadY > canvas.height) roadY = 0;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawRect(150, roadY, 300, 400, "darkgray"); // Road
+      drawRect(carX, 300, 40, 60, "red"); // Car
+
+      requestAnimationFrame(updateGame);
+    }
+
+    updateGame(); // Start game loop
+  </script>
+</body>
+</html>
