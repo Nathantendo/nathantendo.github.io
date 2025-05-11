@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donkey Kong Platformer</title>
+    <title>Donkey Kong Classic</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Donkey Kong Platformer</h1>
+    <h1>Donkey Kong Classic</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -18,12 +18,15 @@
 
         let player = { x: 50, y: 350, width: 20, height: 20, dy: 0, onGround: true };
         let barrels = [];
-        let ladders = [{ x: 180, y: 250, width: 20, height: 100 }, { x: 220, y: 150, width: 20, height: 100 }];
+        let ladders = [{ x: 120, y: 250, width: 20, height: 100 }, { x: 270, y: 150, width: 20, height: 100 }];
         let platforms = [
-            { x: 20, y: 380, width: 360, height: 10 }, { x: 40, y: 300, width: 320, height: 10 },
-            { x: 20, y: 220, width: 360, height: 10 }, { x: 40, y: 140, width: 320, height: 10 },
-            { x: 180, y: 60, width: 40, height: 40 } // Goal
+            { x: 20, y: 380, width: 360, height: 10, slope: false }, 
+            { x: 40, y: 300, width: 320, height: 10, slope: true }, 
+            { x: 20, y: 220, width: 360, height: 10, slope: false }, 
+            { x: 40, y: 140, width: 320, height: 10, slope: true }, 
+            { x: 180, y: 60, width: 40, height: 40 } // Goal platform
         ];
+        let kong = { x: 180, y: 40, width: 40, height: 40 };
 
         function drawPlayer() {
             ctx.fillStyle = "blue";
@@ -49,12 +52,18 @@
             });
         }
 
+        function drawKong() {
+            ctx.fillStyle = "orange";
+            ctx.fillRect(kong.x, kong.y, kong.width, kong.height);
+        }
+
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPlatforms();
             drawLadders();
             drawPlayer();
             drawBarrels();
+            drawKong();
 
             // Gravity effect
             player.y += player.dy;
@@ -71,10 +80,11 @@
                 }
             });
 
-            // Update barrels
+            // Update barrels (rolling effect)
             barrels.forEach(barrel => {
                 barrel.x -= 2;
-                if (barrel.x < 0) barrel.x = 350;
+                if (barrel.x < 0) barrel.y += 40; // Barrel falls to next level
+                if (barrel.y > canvas.height) barrel.y = kong.y + 20; // Reset barrels
             });
 
             requestAnimationFrame(update);
@@ -97,7 +107,7 @@
         });
 
         setInterval(() => {
-            barrels.push({ x: 350, y: 100 });
+            barrels.push({ x: kong.x, y: kong.y + 20 });
         }, 3000);
 
         update();
