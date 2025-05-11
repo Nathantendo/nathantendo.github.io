@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kong Donkey</title>
+    <style>
+        body { text-align: center; background: black; color: white; }
+        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
+    </style>
+</head>
+<body>
+    <h1>Kong Donkey</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let player = { x: 50, y: 350, width: 20, height: 20 };
+        let barrels = [];
+        let platforms = [
+            { x: 20, y: 380, width: 360, height: 10 },
+            { x: 40, y: 300, width: 320, height: 10 },
+            { x: 20, y: 220, width: 360, height: 10 },
+            { x: 40, y: 140, width: 320, height: 10 },
+            { x: 180, y: 60, width: 40, height: 40 } // Goal
+        ];
+
+        function drawPlayer() {
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawPlatforms() {
+            ctx.fillStyle = "brown";
+            platforms.forEach(platform => {
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+            });
+        }
+
+        function drawBarrels() {
+            ctx.fillStyle = "red";
+            barrels.forEach(barrel => {
+                ctx.beginPath();
+                ctx.arc(barrel.x, barrel.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlatforms();
+            drawPlayer();
+            drawBarrels();
+
+            barrels.forEach(barrel => {
+                barrel.y += 2;
+                if (barrel.y > canvas.height) barrel.y = 50;
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") player.x -= 10;
+            if (e.key === "ArrowRight") player.x += 10;
+            if (e.key === "ArrowUp") player.y -= 20;
+            if (e.key === "ArrowDown") player.y += 20;
+        });
+
+        setInterval(() => {
+            barrels.push({ x: Math.random() * 350, y: 50 });
+        }, 2000);
+
+        update();
+    </script>
+</body>
+</html>
