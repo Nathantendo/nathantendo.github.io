@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NES Space Shooter</title>
+  <style>
+    canvas { background: black; display: block; margin: auto; }
+    body { text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let playerX = canvas.width / 2, playerY = 450;
+    let bullets = [], enemies = [];
+    
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" && playerX > 0) playerX -= 10;
+      if (event.key === "ArrowRight" && playerX < canvas.width - 30) playerX += 10;
+      if (event.key === " ") bullets.push({ x: playerX + 10, y: playerY }); // Shoot
+    });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function updateGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawRect(playerX, playerY, 30, 30, "white"); // Player ship
+      
+      bullets.forEach((bullet, index) => {
+        bullet.y -= 5;
+        drawRect(bullet.x, bullet.y, 5, 10, "red");
+        if (bullet.y < 0) bullets.splice(index, 1); // Remove off-screen bullets
+      });
+
+      if (Math.random() < 0.02) enemies.push({ x: Math.random() * canvas.width, y: 0 }); // Spawn enemies
+
+      enemies.forEach((enemy, index) => {
+        enemy.y += 3;
+        drawRect(enemy.x, enemy.y, 30, 30, "blue");
+        if (enemy.y > canvas.height) enemies.splice(index, 1); // Remove off-screen enemies
+      });
+
+      requestAnimationFrame(updateGame);
+    }
+
+    updateGame(); // Start the game loop
+  </script>
+</body>
+</html>
