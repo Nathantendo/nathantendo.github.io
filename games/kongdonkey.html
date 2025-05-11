@@ -3,114 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donkey Kong Classic</title>
-    <style>
-        body { text-align: center; background: black; color: white; }
-        canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
-    </style>
+    <title>Donkey Kong Arcade</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Donkey Kong Classic</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-
-        let player = { x: 50, y: 350, width: 20, height: 20, dy: 0, onGround: true };
-        let barrels = [];
-        let ladders = [{ x: 120, y: 250, width: 20, height: 100 }, { x: 270, y: 150, width: 20, height: 100 }];
-        let platforms = [
-            { x: 20, y: 380, width: 360, height: 10, slope: false }, 
-            { x: 40, y: 300, width: 320, height: 10, slope: true }, 
-            { x: 20, y: 220, width: 360, height: 10, slope: false }, 
-            { x: 40, y: 140, width: 320, height: 10, slope: true }, 
-            { x: 180, y: 60, width: 40, height: 40 } // Goal platform
-        ];
-        let kong = { x: 180, y: 40, width: 40, height: 40 };
-
-        function drawPlayer() {
-            ctx.fillStyle = "blue";
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        function drawPlatforms() {
-            ctx.fillStyle = "brown";
-            platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
-        }
-
-        function drawLadders() {
-            ctx.fillStyle = "yellow";
-            ladders.forEach(ladder => ctx.fillRect(ladder.x, ladder.y, ladder.width, ladder.height));
-        }
-
-        function drawBarrels() {
-            ctx.fillStyle = "red";
-            barrels.forEach(barrel => {
-                ctx.beginPath();
-                ctx.arc(barrel.x, barrel.y, 10, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        function drawKong() {
-            ctx.fillStyle = "orange";
-            ctx.fillRect(kong.x, kong.y, kong.width, kong.height);
-        }
-
-        function update() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPlatforms();
-            drawLadders();
-            drawPlayer();
-            drawBarrels();
-            drawKong();
-
-            // Gravity effect
-            player.y += player.dy;
-            player.dy += 0.5;
-
-            // Ensure player stands on platforms
-            player.onGround = false;
-            platforms.forEach(platform => {
-                if (player.y + player.height > platform.y && player.y < platform.y + platform.height &&
-                    player.x + player.width > platform.x && player.x < platform.x + platform.width) {
-                    player.y = platform.y - player.height;
-                    player.dy = 0;
-                    player.onGround = true;
-                }
-            });
-
-            // Update barrels (rolling effect)
-            barrels.forEach(barrel => {
-                barrel.x -= 2;
-                if (barrel.x < 0) barrel.y += 40; // Barrel falls to next level
-                if (barrel.y > canvas.height) barrel.y = kong.y + 20; // Reset barrels
-            });
-
-            requestAnimationFrame(update);
-        }
-
-        document.addEventListener("keydown", e => {
-            if (e.key === "ArrowLeft") player.x -= 10;
-            if (e.key === "ArrowRight") player.x += 10;
-            if (e.key === "ArrowUp") {
-                ladders.forEach(ladder => {
-                    if (player.x + player.width > ladder.x && player.x < ladder.x + ladder.width &&
-                        player.y + player.height > ladder.y && player.y < ladder.y + ladder.height) {
-                        player.y -= 10; // Climb ladder
-                    }
-                });
-            }
-            if (e.key === "ArrowUp" && player.onGround) {
-                player.dy = -10; // Jump
-            }
-        });
-
-        setInterval(() => {
-            barrels.push({ x: kong.x, y: kong.y + 20 });
-        }, 3000);
-
-        update();
-    </script>
+    <h1>Donkey Kong Arcade</h1>
+    <div class="game">
+        <div class="kong"></div>
+        <div class="player"></div>
+        <div class="barrel"></div>
+        <div class="platform platform1"></div>
+        <div class="platform platform2"></div>
+        <div class="platform platform3"></div>
+        <div class="ladder ladder1"></div>
+        <div class="ladder ladder2"></div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <audio id="jumpSound" src="jump.mp3"></audio>
+        <audio id="barrelSound" src="barrel.mp3"></audio>
+        <audio id="music" src="arcade-music.mp3" loop autoplay></audio>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
