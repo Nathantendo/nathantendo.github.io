@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Adventure</title>
+  <style>
+    canvas { background: forestgreen; display: block; margin: auto; }
+    body { text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let playerX = canvas.width / 2, playerY = canvas.height / 2;
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") playerX -= 10;
+      if (event.key === "ArrowRight") playerX += 10;
+      if (event.key === "ArrowUp") playerY -= 10;
+      if (event.key === "ArrowDown") playerY += 10;
+    });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function updateGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawRect(playerX, playerY, 30, 30, "blue"); // Player
+
+      requestAnimationFrame(updateGame);
+    }
+
+    updateGame(); // Start game loop
+  </script>
+</body>
+</html>
