@@ -3,26 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kong Donkey</title>
+    <title>Donkey Kong Platformer</title>
     <style>
         body { text-align: center; background: black; color: white; }
         canvas { background: #222; display: block; margin: auto; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <h1>Kong Donkey</h1>
+    <h1>Donkey Kong Platformer</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        let player = { x: 50, y: 350, width: 20, height: 20 };
+        let player = { x: 50, y: 350, width: 20, height: 20, dy: 0, onGround: true };
         let barrels = [];
+        let ladders = [{ x: 180, y: 250, width: 20, height: 100 }, { x: 220, y: 150, width: 20, height: 100 }];
         let platforms = [
-            { x: 20, y: 380, width: 360, height: 10 },
-            { x: 40, y: 300, width: 320, height: 10 },
-            { x: 20, y: 220, width: 360, height: 10 },
-            { x: 40, y: 140, width: 320, height: 10 },
+            { x: 20, y: 380, width: 360, height: 10 }, { x: 40, y: 300, width: 320, height: 10 },
+            { x: 20, y: 220, width: 360, height: 10 }, { x: 40, y: 140, width: 320, height: 10 },
             { x: 180, y: 60, width: 40, height: 40 } // Goal
         ];
 
@@ -33,9 +32,12 @@
 
         function drawPlatforms() {
             ctx.fillStyle = "brown";
-            platforms.forEach(platform => {
-                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-            });
+            platforms.forEach(platform => ctx.fillRect(platform.x, platform.y, platform.width, platform.height));
+        }
+
+        function drawLadders() {
+            ctx.fillStyle = "yellow";
+            ladders.forEach(ladder => ctx.fillRect(ladder.x, ladder.y, ladder.width, ladder.height));
         }
 
         function drawBarrels() {
@@ -50,12 +52,29 @@
         function update() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawPlatforms();
+            drawLadders();
             drawPlayer();
             drawBarrels();
 
+            // Gravity effect
+            player.y += player.dy;
+            player.dy += 0.5;
+
+            // Ensure player stands on platforms
+            player.onGround = false;
+            platforms.forEach(platform => {
+                if (player.y + player.height > platform.y && player.y < platform.y + platform.height &&
+                    player.x + player.width > platform.x && player.x < platform.x + platform.width) {
+                    player.y = platform.y - player.height;
+                    player.dy = 0;
+                    player.onGround = true;
+                }
+            });
+
+            // Update barrels
             barrels.forEach(barrel => {
-                barrel.y += 2;
-                if (barrel.y > canvas.height) barrel.y = 50;
+                barrel.x -= 2;
+                if (barrel.x < 0) barrel.x = 350;
             });
 
             requestAnimationFrame(update);
@@ -64,13 +83,22 @@
         document.addEventListener("keydown", e => {
             if (e.key === "ArrowLeft") player.x -= 10;
             if (e.key === "ArrowRight") player.x += 10;
-            if (e.key === "ArrowUp") player.y -= 20;
-            if (e.key === "ArrowDown") player.y += 20;
+            if (e.key === "ArrowUp") {
+                ladders.forEach(ladder => {
+                    if (player.x + player.width > ladder.x && player.x < ladder.x + ladder.width &&
+                        player.y + player.height > ladder.y && player.y < ladder.y + ladder.height) {
+                        player.y -= 10; // Climb ladder
+                    }
+                });
+            }
+            if (e.key === "ArrowUp" && player.onGround) {
+                player.dy = -10; // Jump
+            }
         });
 
         setInterval(() => {
-            barrels.push({ x: Math.random() * 350, y: 50 });
-        }, 2000);
+            barrels.push({ x: 350, y: 100 });
+        }, 3000);
 
         update();
     </script>
