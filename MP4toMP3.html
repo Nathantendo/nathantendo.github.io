@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MP4 to MP3 web converter</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:900px;margin:36px auto;padding:0 20px;color:#111}
+  h1{font-size:20px;margin-bottom:6px}
+  p.small{color:#555;margin-top:0;margin-bottom:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type=file]{padding:6px}
+  button{padding:8px 12px;cursor:pointer}
+  #log{white-space:pre-wrap;background:#f7f7f7;border:1px solid #eee;padding:12px;margin-top:12px;font-size:13px}
+  audio{display:block;margin-top:12px;width:100%}
+  .notice{background:#fff8e1;border-left:4px solid #ffd54f;padding:10px;margin:10px 0}
+</style>
+</head>
+<body>
+<h1>MP4 → MP3 (client-side, no external scripts)</h1>
+<p class="small">Select a video file. The page will attempt to produce an MP3 file. If your browser doesn't support in-browser MP3 encoding, it will fall back to producing a WAV file instead.</p>
+
+<div class="row">
+  <input id="file" type="file" accept="video/*,audio/*"/>
+  <button id="convert">Convert</button>
+  <button id="cancel" disabled>Cancel</button>
+</div>
+
+<div id="status" class="small"></div>
+<div id="log" aria-live="polite"></div>
+
+<div id="downloadArea"></div>
+
+<script>
+(function(){
+  const fileInput = document.getElementById('file');
+  const convertBtn = document.getElementById('convert');
+  const cancelBtn = document.getElementById('cancel');
+  const status = document.getElementById('status');
+  const logEl = document.getElementById('log');
+  const downloadArea = document.getElementById('downloadArea');
+
+  let abortController = null;
+  let activeRecorder = null;
+  let activeStream = null;
+
+  function log(...args){ logEl.textContent += args.join(' ') + '\\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+  function resetUI(){
+    convertBtn.disabled = false;
+    cancelBtn.disabled = true;
+    status.textContent = '';
+    if(activeRecorder){ try{ activeRecorder.stop(); }catch(e){} activeRecorder = null; }
+    if(activeStream){ activeStream.getTracks().forEach(t=>t.stop()); activeStream = null; }
+    abortController = null;
+  }
+
+  cancelBtn.addEventListener('click', ()=>{
+    if(abortController) abortController.abort();
+    resetUI();
+    log('Conversion cancelled by user.');
+  });
+
+  convertBtn.addEventListener('click', async ()=>{
+    downloadArea.innerHTML = '';
+    logEl.textContent = '';
+    const file = fileInput.files && fileInput.files[0];
+    if(!file){ alert('Choose a file first'); return; }
+
+    convertBtn.disabled = true;
+    cancelBtn.disabled = false;
+    status.textContent = 'Starting...';
+    log('File:', file.name, `(${Math.round(file.size/1024/1024*10)/10} MB)`);
+
+    abortController = new AbortController();
+    const signal = abortController.signal;
+
+    // Try MediaRecorder -> audio/mpeg first (small/simple path)
+    const canTryMediaRecorderMP3 = (typeof MediaRecorder !== 'undefined');
+    if(canTryMediaRecorderMP3){
+      try{
+        log('Attempting MediaRecorder(audio/mpeg) path...');
+        status.textContent = 'Loading video element...';
+
+        // Create hidden video element and load file as blob URL
+        const video = document.createElement('video');
+        video.muted = true; video.controls = false; video.preload = 'auto';
+        video.style.display = 'none';
+        document.body.appendChild(video);
+
+        const objectURL = URL.createObjectURL(file);
+        video.src = objectURL;
+
+        // Wait until enough data is available
+        await new Promise((res, rej) => {
+          const t = setTimeout(()=>{ /* fallback if metadata doesn't load quickly */ }, 2000);
+          function onLoaded(){
+            clearTimeout(t);
+            cleanupListeners();
+            res();
+          }
+          function onErr(e){
+            cleanupListeners();
+            rej(e);
+          }
+          function cleanupListeners(){
+            video.removeEventListener('loadedmetadata', onLoaded);
+            video.removeEventListener('error', onErr);
+          }
+          video.addEventListener('loadedmetadata', onLoaded);
+          video.addEventListener('error', onErr);
+        });
+
+        // Some browsers require play() before captureStream is available
+        try { await video.play().catch(()=>{}); }catch(e){/* ignore autoplay issues */ }
+
+        // captureStream
+        const stream = video.captureStream ? video.captureStream() : video.mozCaptureStream ? video.mozCaptureStream() : null;
+        if(!stream){
+          throw new Error('captureStream not available in this browser.');
+        }
+
+        // Keep only audio tracks
+        const audioOnly = new MediaStream(stream.getAudioTracks());
+        activeStream = audioOnly;
+
+        // Check if browser supports audio/mpeg
+        const mp3Type = 'audio/mpeg';
+        const options = MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mp3Type) ? { mimeType: mp3Type } : null;
+
+        if(!options){
+          log('MediaRecorder does not report support for audio/mpeg. Falling back to WAV decoding path.');
+          // cleanup
+          video.pause();
+          URL.revokeObjectURL(objectURL);
+          video.remove();
+          // continue to WAV fallback
+          await fallbackToWav(file, signal);
+          resetUI();
+          return;
+        }
+
+        log('MediaRecorder reports audio/mpeg is supported. Starting recorder...');
+        status.textContent = 'Recording audio (mp3) from the file...';
+
+        const recordedChunks = [];
+        const recorder = new MediaRecorder(audioOnly, options);
+        activeRecorder = recorder;
+
+        recorder.ondataavailable = (ev) => {
+          if(ev.data && ev.data.size) recordedChunks.push(ev.data);
+        };
+        recorder.onerror = (ev) => {
+          log('MediaRecorder error:', ev.error && ev.error.message);
+        };
+
+        recorder.onstop = () => {
+          try{
+            video.pause();
+            URL.revokeObjectURL(objectURL);
+            video.remove();
+          }catch(e){}
+          const blob = new Blob(recordedChunks, { type: mp3Type });
+          log('Recorded blob:', blob.size, 'bytes');
+          const url = URL.createObjectURL(blob);
+          createDownloadUI(url, file.name.replace(/\.[^/.]+$/, '') + '.mp3', blob.type);
+          resetUI();
+        };
+
+        // Start recording entire duration. We can use timeslice null and stop when video ends.
+        recorder.start();
+        // Start playback (it may already be playing). When video ends, stop recorder.
+        video.addEventListener('ended', () => {
+          if(recorder && recorder.state === 'recording') recorder.stop();
+        });
+
+        // If video has already ended or duration 0, stop quickly
+        if(video.duration && !isFinite(video.duration) === false){
+          // nothing special
+        }
+
+        // Also stop when abort is triggered
+        signal.addEventListener('abort', ()=>{
+          if(recorder && recorder.state === 'recording') recorder.stop();
+        });
+
+        status.textContent = 'Recording... (wait for the video to finish)';
+        log('Recording in progress. The recorder will stop when playback reaches the end.');
+
+        // If playback hasn't started, attempt to play silently to drive captureStream
+        try{ await video.play().catch(()=>{}); }catch(e){}
+
+        return; // done (the recorder's onstop will handle UI)
+      }catch(err){
+        log('MediaRecorder→MP3 path failed:', err && err.message ? err.message : err);
+        // fallthrough to WAV fallback
+      }
+    }
+
+    // If we reach here, either MediaRecorder MP3 unsupported or failed -> decode and export WAV
+    try{
+      await fallbackToWav(file, signal);
+    }catch(err){
+      log('Conversion failed:', err && err.message ? err.message : err);
+      alert('Conversion failed: ' + (err && err.message ? err.message : err));
+    } finally {
+      resetUI();
+    }
+  });
+
+  // --- WAV fallback: decode audio track, resample/render and export PCM WAV ---
+  async function fallbackToWav(file, signal){
+    log('Using WAV fallback: decoding audio via Web Audio API and exporting WAV.');
+    status.textContent = 'Decoding audio...';
+
+    // Read file as ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    if(signal && signal.aborted) throw new Error('Aborted');
+
+    // Create AudioContext (offline or regular) and decode
+    const AudioContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext || window.AudioContext;
+    if(!AudioContextClass){
+      throw new Error('Web Audio API not available in this browser.');
+    }
+
+    // Use a temporary AudioContext to decode audio metadata (decodeAudioData needs a context)
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuf;
+    try{
+      audioBuf = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    }catch(e){
+      // Some browsers prefer decodeAudioData with callback
+      audioBuf = await new Promise((res, rej)=>{
+        ctx.decodeAudioData(arrayBuffer.slice(0), res, rej);
+      });
+    } finally {
+      try{ ctx.close(); }catch(e){}
+    }
+    if(signal && signal.aborted) throw new Error('Aborted');
+
+    log('Decoded audio: channels=', audioBuf.numberOfChannels, 'length(samples)=', audioBuf.length, 'sampleRate=', audioBuf.sampleRate);
+    status.textContent = 'Rendering audio to WAV...';
+
+    // We will use OfflineAudioContext to render the full buffer if needed (but audioBuf is already decoded)
+    // Convert AudioBuffer to interleaved 16-bit PCM and build WAV
+    const wavBlob = audioBufferToWavBlob(audioBuf);
+    log('WAV size:', Math.round(wavBlob.size/1024) + ' KB');
+
+    const url = URL.createObjectURL(wavBlob);
+    createDownloadUI(url, file.name.replace(/\.[^/.]+$/, '') + '.wav', wavBlob.type);
+
+    status.textContent = 'Finished (WAV).';
+    return;
+  }
+
+  function createDownloadUI(url, filename, mimeType){
+    downloadArea.innerHTML = '';
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.textContent = 'Download ' + filename;
+    a.style.display = 'inline-block';
+    a.style.marginRight = '12px';
+    downloadArea.appendChild(a);
+
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.src = url;
+    downloadArea.appendChild(audio);
+
+    const info = document.createElement('div');
+    info.className = 'small';
+    info.textContent = 'If this is WAV and you strictly require MP3 output in browsers that do not natively encode MP3, consider using a bundled MP3 encoder (e.g. LAME WASM).';
+    info.style.marginTop = '8px';
+    downloadArea.appendChild(info);
+  }
+
+  // Convert AudioBuffer to WAV Blob (16-bit PCM, little endian)
+  function audioBufferToWavBlob(buffer, opt){
+    opt = opt || {};
+    const numChannels = buffer.numberOfChannels;
+    const sampleRate = buffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+
+    // interleave
+    const samples = buffer.length;
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numChannels * bytesPerSample;
+    const dataSize = samples * blockAlign;
+    const bufferLength = 44 + dataSize;
+    const arrayBuffer = new ArrayBuffer(bufferLength);
+    const view = new DataView(arrayBuffer);
+
+    /* RIFF identifier */
+    writeString(view, 0, 'RIFF');
+    /* file length */
+    view.setUint32(4, 36 + dataSize, true);
+    /* RIFF type */
+    writeString(view, 8, 'WAVE');
+    /* format chunk identifier */
+    writeString(view, 12, 'fmt ');
+    /* format chunk length */
+    view.setUint32(16, 16, true);
+    /* sample format (raw) */
+    view.setUint16(20, format, true);
+    /* channel count */
+    view.setUint16(22, numChannels, true);
+    /* sample rate */
+    view.setUint32(24, sampleRate, true);
+    /* byte rate (sampleRate * blockAlign) */
+    view.setUint32(28, sampleRate * blockAlign, true);
+    /* block align (channel count * bytesPerSample) */
+    view.setUint16(32, blockAlign, true);
+    /* bits per sample */
+    view.setUint16(34, bitDepth, true);
+    /* data chunk identifier */
+    writeString(view, 36, 'data');
+    /* data chunk length */
+    view.setUint32(40, dataSize, true);
+
+    // Write interleaved PCM samples
+    let offset = 44;
+    const channels = [];
+    for(let i=0;i<numChannels;i++) channels.push(buffer.getChannelData(i));
+
+    for(let i=0;i<samples;i++){
+      for(let ch=0; ch<numChannels; ch++){
+        let sample = channels[ch][i];
+        // clamp
+        sample = Math.max(-1, Math.min(1, sample));
+        // scale to 16-bit signed int
+        const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset, Math.round(intSample), true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuffer], { type: 'audio/wav' });
+
+    function writeString(view, offset, str){
+      for(let i=0;i<str.length;i++){
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    }
+  }
+
+  // initial informational log
+  log('Ready. Select a video file and click Convert.');
+  log('Note: Browser MP3 support varies. Chrome-based browsers may produce MP3 using MediaRecorder; others may fall back to WAV.');
+})();
+</script>
+</body>
+</html>
