@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEEP DIVE: Submarine Simulator</title>
+    <style>
+        :root {
+            --bg-color: #00090f;
+            --panel-bg: #031824;
+            --text-color: #8bbdc9;
+            --cyan: #00f2ff;
+            --red: #ff3333;
+            --yellow: #ffcc00;
+            --green: #33ff33;
+            --border: 1px solid #1a4d66;
+            --font-tech: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-tech);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .game-console {
+            width: 800px;
+            height: 600px;
+            background-color: var(--panel-bg);
+            border: 2px solid var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+            display: grid;
+            grid-template-rows: 60px 1fr 150px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* --- HEADER STATS --- */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--cyan);
+            padding-bottom: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 1.4em; color: var(--cyan); }
+        .stat-label { font-size: 0.8em; opacity: 0.7; }
+        
+        .danger { color: var(--red) !important; animation: blink 1s infinite; }
+        .warning { color: var(--yellow) !important; }
+
+        /* --- MAIN VIEWPORT --- */
+        .viewport {
+            position: relative;
+            background: radial-gradient(circle, #051e2e 0%, #000000 90%);
+            margin: 20px 0;
+            border: var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Station Screens */
+        .station-screen {
+            display: none; /* Hidden by default */
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .active-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+        /* Sonar Visuals */
+        #radar-line {
+            width: 200px;
+            height: 2px;
+            background-color: var(--cyan);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 0;
+            animation: scan 4s infinite linear;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+        
+        .blip {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--red);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--red);
+            top: 40%; left: 60%;
+            animation: pulse 1s infinite;
+            display: none;
+        }
+
+        /* --- CONTROLS --- */
+        .controls-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 10px;
+            font-family: var(--font-tech);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        button:hover { background: rgba(0, 242, 255, 0.1); }
+        button:disabled { border-color: #555; color: #555; cursor: not-allowed; }
+        
+        .active-tab {
+            background-color: var(--cyan);
+            color: var(--bg-color);
+            font-weight: bold;
+        }
+
+        .log-box {
+            border: var(--border);
+            background: #000;
+            color: #ccc;
+            padding: 10px;
+            font-size: 0.8em;
+            overflow-y: auto;
+            height: 100%;
+            text-align: left;
+        }
+
+        .log-entry { margin-bottom: 5px; border-bottom: 1px solid #222; }
+        .log-alert { color: var(--red); }
+        .log-success { color: var(--green); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes scan { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(0, 0); } }
+
+        .shake-effect { animation: shake 0.5s; }
+
+        /* Overlay for Game Over */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-console" id="console">
+        <div id="overlay">
+            <h1 id="end-title">GAME OVER</h1>
+            <p id="end-reason">Hull Integrity Critical</p>
+            <button onclick="location.reload()">Reboot System</button>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="stat-label">DEPTH (m)</div>
+                <div class="stat-val" id="depth-disp">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">HULL INTEGRITY</div>
+                <div class="stat-val" id="hull-disp">100%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">NOISE LEVEL</div>
+                <div class="stat-val" id="noise-disp">LOW</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">METAL SCRAP</div>
+                <div class="stat-val" id="scrap-disp">5</div>
+            </div>
+        </div>
+
+        <div class="viewport" id="viewport">
+            
+            <div id="screen-helm" class="station-screen active-screen">
+                <h2>HELM CONTROL</h2>
+                <p>Current Status: <span id="engine-status" style="color:var(--yellow)">IDLE</span></p>
+                <div style="margin-top:20px;">
+                    <button id="btn-engine" onclick="toggleEngine()">ENGAGE ENGINES</button>
+                </div>
+                <p style="font-size: 0.8em; margin-top:20px; color:#666;">
+                    WARNING: Engines generate NOISE.<br>Noise attracts ENTITIES.
+                </p>
+            </div>
+
+            <div id="screen-sonar" class="station-screen">
+                <div id="radar-line"></div>
+                <div id="monster-blip" class="blip"></div>
+                <div style="position: absolute; bottom: 20px; width: 100%;">
+                    <h2>SONAR ARRAY</h2>
+                    <p id="sonar-text">Passive Monitoring Active...</p>
+                    <button onclick="pingSonar()">ACTIVE PING (High Noise)</button>
+                </div>
+            </div>
+
+            <div id="screen-eng" class="station-screen">
+                <h2>DAMAGE CONTROL</h2>
+                <p>Hull Status: <span id="hull-status-text">STABLE</span></p>
+                <br>
+                <button id="btn-repair" onclick="repairHull()">WELD HULL (-1 Scrap)</button>
+                <br><br>
+                <button onclick="scavenge()">SCAVENGE PARTS (+1 Scrap)</button>
+                <p style="font-size: 0.8em; color:#666; margin-top: 10px;">Scavenging takes time and makes noise.</p>
+            </div>
+        </div>
+
+        <div class="controls-area">
+            <div class="tabs">
+                <button id="tab-helm" class="active-tab" onclick="switchStation('helm')">HELM (Move)</button>
+                <button id="tab-sonar" onclick="switchStation('sonar')">SONAR (Look)</button>
+                <button id="tab-eng" onclick="switchStation('eng')">ENGINEERING (Fix)</button>
+            </div>
+            <div class="log-box" id="game-log">
+                <div class="log-entry">System Initialized...</div>
+                <div class="log-entry">Mission: Reach 3000m Depth.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        const state = {
+            depth: 0,
+            hull: 100,
+            noise: 0,
+            scrap: 3,
+            engineOn: false,
+            monsterNearby: false,
+            monsterAggression: 0,
+            gameOver: false
+        };
+
+        const MAX_DEPTH = 3000;
+        const PRESSURE_RATE = 0.05; // Damage per tick based on depth
+        
+        // --- DOM ELEMENTS ---
+        const ui = {
+            depth: document.getElementById('depth-disp'),
+            hull: document.getElementById('hull-disp'),
+            noise: document.getElementById('noise-disp'),
+            scrap: document.getElementById('scrap-disp'),
+            log: document.getElementById('game-log'),
+            viewport: document.getElementById('viewport'),
+            blip: document.getElementById('monster-blip'),
+            engineBtn: document.getElementById('btn-engine'),
+            engineStatus: document.getElementById('engine-status'),
+            overlay: document.getElementById('overlay'),
+            endTitle: document.getElementById('end-title'),
+            endReason: document.getElementById('end-reason')
+        };
+
+        // --- CORE LOOP ---
+        setInterval(gameLoop, 1000);
+
+        function gameLoop() {
+            if (state.gameOver) return;
+
+            // 1. DEPTH MECHANIC
+            if (state.engineOn) {
+                state.depth += 50; // Descent speed
+                state.noise = 80; // High noise
+                state.engineStatus = "DESCENDING";
+            } else {
+                // Silent running
+                state.noise = Math.max(0, state.noise - 10); // Noise decays
+            }
+
+            // 2. PRESSURE MECHANIC
+            // The deeper you go, the more passive damage you take if not careful
+            let pressureDamage = 0;
+            if (state.depth > 1000) pressureDamage = 1;
+            if (state.depth > 2000) pressureDamage = 2;
+            
+            // Random leak chance increases with depth
+            if (Math.random() * 3000 < state.depth) {
+                log("WARNING: Pressure leak detected!", "alert");
+                takeDamage(5);
+            }
+
+            // 3. MONSTER MECHANIC (The Sound Trap)
+            // Chance to spawn monster based on depth and NOISE
+            let spawnChance = (state.depth / 5000) + (state.noise / 200);
+            
+            if (!state.monsterNearby && Math.random() < spawnChance) {
+                state.monsterNearby = true;
+                state.monsterAggression = 100; // Time until it leaves
+                // Visual cue if on sonar
+                if(document.getElementById('screen-sonar').style.display !== 'none') {
+                    ui.blip.style.display = 'block';
+                }
+                log("SONAR: Large biological signature detected.", "alert");
+            }
+
+            if (state.monsterNearby) {
+                // If noise is high, monster attacks
+                if (state.noise > 30) {
+                    takeDamage(15);
+                    log("ALERT: HULL IMPACT! Creature attracted to noise!", "alert");
+                    ui.viewport.classList.add("shake-effect");
+                    setTimeout(() => ui.viewport.classList.remove("shake-effect"), 500);
+                } else {
+                    // If silent, monster might lose interest
+                    state.monsterAggression -= 10;
+                    if (state.monsterAggression <= 0) {
+                        state.monsterNearby = false;
+                        ui.blip.style.display = 'none';
+                        log("SONAR: Creature signal lost.", "success");
+                    }
+                }
+            }
+
+            // 4. CHECK WIN/LOSS
+            checkGameState();
+            updateUI();
+        }
+
+        // --- ACTIONS ---
+
+        function toggleEngine() {
+            state.engineOn = !state.engineOn;
+            if (state.engineOn) {
+                ui.engineBtn.innerText = "DISENGAGE ENGINES";
+                ui.engineStatus.innerText = "DESCENDING";
+                ui.engineStatus.style.color = "var(--green)";
+                log("Engine engaged. Noise levels rising.");
+            } else {
+                ui.engineBtn.innerText = "ENGAGE ENGINES";
+                ui.engineStatus.innerText = "SILENT RUNNING";
+                ui.engineStatus.style.color = "var(--cyan)";
+                log("Engine cut. Entering silent running.");
+            }
+            updateUI();
+        }
+
+        function switchStation(stationName) {
+            // Hide all
+            document.querySelectorAll('.station-screen').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tabs button').forEach(el => el.classList.remove('active-tab'));
+            document.querySelectorAll('.station-screen').forEach(el => el.classList.remove('active-screen'));
+
+            // Show selected
+            document.getElementById(`screen-${stationName}`).style.display = 'block';
+            document.getElementById(`screen-${stationName}`).classList.add('active-screen');
+            document.getElementById(`tab-${stationName}`).classList.add('active-tab');
+
+            // Specific logic
+            if (stationName === 'sonar' && state.monsterNearby) {
+                ui.blip.style.display = 'block';
+            }
+        }
+
+        function repairHull() {
+            if (state.scrap > 0 && state.hull < 100) {
+                state.scrap--;
+                state.hull = Math.min(100, state.hull + 25);
+                state.noise += 40; // Repairing is loud!
+                log("Hull welded. Integrity improved.", "success");
+                updateUI();
+            } else if (state.scrap <= 0) {
+                log("Insufficient scrap metal!", "alert");
+            } else {
+                log("Hull is already at maximum integrity.");
+            }
+        }
+
+        function scavenge() {
+            state.noise += 20;
+            if(Math.random() > 0.5) {
+                state.scrap++;
+                log("Found usable piping (+1 Scrap).", "success");
+            } else {
+                log("Scavenge failed. Nothing found.");
+            }
+            updateUI();
+        }
+
+        function pingSonar() {
+            state.noise += 100; // Huge noise spike
+            log("ACTIVE PING TRANSMITTED.", "alert");
+            if (state.monsterNearby) {
+                log("RETURN SIGNAL: TARGET LOCK 50m.", "alert");
+                ui.blip.style.display = 'block';
+            } else {
+                log("Return Signal: Clear.");
+            }
+            updateUI();
+        }
+
+        function takeDamage(amount) {
+            state.hull -= amount;
+            if (state.hull < 30) ui.hull.classList.add('danger');
+            updateUI();
+        }
+
+        // --- UI & UTILS ---
+
+        function updateUI() {
+            ui.depth.innerText = state.depth;
+            ui.hull.innerText = Math.floor(state.hull) + "%";
+            ui.scrap.innerText = state.scrap;
+            
+            // Noise Display
+            if (state.noise < 30) {
+                ui.noise.innerText = "LOW"; 
+                ui.noise.className = "stat-val";
+            } else if (state.noise < 70) {
+                ui.noise.innerText = "MEDIUM"; 
+                ui.noise.className = "stat-val warning";
+            } else {
+                ui.noise.innerText = "CRITICAL"; 
+                ui.noise.className = "stat-val danger";
+            }
+        }
+
+        function log(msg, type="") {
+            const entry = document.createElement('div');
+            entry.className = "log-entry " + (type === "alert" ? "log-alert" : type === "success" ? "log-success" : "");
+            entry.innerText = `> ${msg}`;
+            ui.log.prepend(entry);
+        }
+
+        function checkGameState() {
+            if (state.hull <= 0) {
+                endGame(false, "HULL INTEGRITY FAILED. SUBMARINE LOST.");
+            } else if (state.depth >= MAX_DEPTH) {
+                endGame(true, "MISSION ACCOMPLISHED. TRENCH REACHED.");
+            }
+        }
+
+        function endGame(win, msg) {
+            state.gameOver = true;
+            ui.overlay.style.display = "flex";
+            ui.endTitle.innerText = win ? "MISSION SUCCESS" : "FATAL ERROR";
+            ui.endTitle.style.color = win ? "var(--green)" : "var(--red)";
+            ui.endReason.innerText = msg;
+        }
+    </script>
+</body>
+</html>
