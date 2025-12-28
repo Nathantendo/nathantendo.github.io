@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Concept: Deep Dive</title>
+    <style>
+        :root {
+            --bg-color: #02121c; /* Deep Ocean Blue */
+            --card-bg: #051e2e;
+            --text-main: #b8c7d1;
+            --accent-cyan: #00f2ff; /* Sonar/System Color */
+            --accent-alert: #ff4a4a; /* Warning/Monster Color */
+            --border-color: #1a3c52;
+            --font-tech: 'Courier New', Courier, monospace;
+            --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--accent-cyan);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            color: var(--accent-cyan);
+            font-family: var(--font-tech);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+
+        h2 {
+            color: var(--accent-cyan);
+            font-family: var(--font-tech);
+            border-left: 4px solid var(--accent-cyan);
+            padding-left: 10px;
+            margin-top: 40px;
+        }
+
+        .section-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .hazard-card {
+            border-left: 4px solid var(--accent-alert);
+        }
+
+        .hazard-card h2 {
+            color: var(--accent-alert);
+            border-left: none;
+            padding-left: 0;
+        }
+
+        strong {
+            color: #fff;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li::before {
+            content: ">>";
+            position: absolute;
+            left: 0;
+            color: var(--accent-cyan);
+            font-family: var(--font-tech);
+            font-size: 0.8em;
+        }
+
+        /* Table Styles */
+        .comparison-section {
+            margin-top: 50px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: var(--font-tech);
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #0a2a3d;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background-color: #0b2e40;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            th, td {
+                display: block;
+                width: 100%;
+            }
+            tr {
+                margin-bottom: 15px;
+                display: block;
+                border-bottom: 2px solid var(--accent-cyan);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Mission Log: Submarine Survival</h1>
+            <p style="font-family: var(--font-tech);">STATUS: CRITICAL // DEPTH: UNKNOWN</p>
+        </header>
+
+        <div class="section-card">
+            <h2>1. The Submarine: Your "Home" and "Hazard"</h2>
+            <p>Since the player is stuck inside the sub, the vessel should feel like a character itself.</p>
+            
+            <ul>
+                <li><strong>The Stress Loop:</strong> You want to go deeper, but depth increases pressure. Pressure causes leaks. Leaks require repairs.</li>
+                <li><strong>Station Management:</strong> Instead of just "driving," the player might have to physically move between the Sonar (to see), the Engine (to move), and the Hull (to weld shut holes).</li>
+            </ul>
+        </div>
+
+        <div class="section-card hazard-card">
+            <h2>2. The Monsters: Audio over Visuals</h2>
+            <p>In the deep ocean, you usually hear something before you see it.</p>
+            <ul>
+                <li><strong>Bio-luminescence:</strong> Maybe the monsters are pitch black except for glowing lures or eyes.</li>
+                <li><strong>The Sound Trap:</strong> Perhaps some monsters are blind but track the sound of your engine or the clanging of your repair hammer.</li>
+            </ul>
+        </div>
+
+        <div class="section-card">
+            <h2>3. The "Depths" Progression</h2>
+            <p>How does the game change as you go deeper?</p>
+            [attachment_0](attachment)
+            <ul>
+                <li><strong>Photic Zone (Surface):</strong> Bright, colorful, but smaller, faster enemies.</li>
+                <li><strong>Midnight Zone:</strong> Total darkness. You rely entirely on floodlights and sonar.</li>
+                <li><strong>The Deep Trenches:</strong> This is where the "boss" monsters live.</li>
+            </ul>
+        </div>
+
+        <div class="section-card">
+            <h2>4. The Repair Mechanic</h2>
+            <p>To make repairs feel urgent, they shouldn't just be a loading bar.</p>
+            <ul>
+                <li><strong>Resource Management:</strong> Do you use your last piece of metal to fix a leak, or to reinforce the engine so you can run away faster?</li>
+                <li><strong>Flooding:</strong> If a room floods, you lose access to the equipment in that room until you pump the water out.</li>
+            </ul>
+        </div>
+
+        <div class="section-card comparison-section">
+            <h2 style="border:none; text-align:center;">Gameplay Styles Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Action-Horror</th>
+                        <th>Strategic Survival</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Combat</strong></td>
+                        <td>Torpedoes and shockwaves</td>
+                        <td>Distraction flares and silent running</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Repair</strong></td>
+                        <td>Quick "welding" mini-games</td>
+                        <td>Long-term hull integrity management</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monster Encounter</strong></td>
+                        <td>High-speed chases</td>
+                        <td>Hide-and-seek in the dark</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+</html>
