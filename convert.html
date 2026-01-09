@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local MP4 to MP3 Converter</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h2 { margin-top: 0; color: #333; }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        .btn {
+            border: 2px solid gray;
+            color: gray;
+            background-color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            min-height: 20px;
+        }
+        #downloadLink {
+            display: none;
+            margin-top: 20px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 10px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>MP4 to MP3 Converter</h2>
+    <p>Client-side only. No server upload.</p>
+    
+    <div class="upload-btn-wrapper">
+        <button class="btn">Select MP4 File</button>
+        <input type="file" id="uploader" accept="video/mp4" />
+    </div>
+
+    <div class="loader" id="loader"></div>
+    <div id="status">Waiting for file...</div>
+    <a id="downloadLink">Download MP3</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+
+<script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    
+    // Initialize FFmpeg
+    // log: true helps debug in the console
+    const ffmpeg = createFFmpeg({ log: true });
+
+    const transcode = async ({ target: { files } }) => {
+        const message = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const downloadLink = document.getElementById('downloadLink');
+
+        if (files.length === 0) return;
+
+        const file = files[0];
+        const fileName = file.name;
+        
+        // Reset UI
+        downloadLink.style.display = 'none';
+        message.innerText = 'Loading FFmpeg core (first time takes a moment)...';
+        loader.style.display = 'block';
+
+        if (!ffmpeg.isLoaded()) {
+            await ffmpeg.load();
+        }
+
+        message.innerText = 'Converting...';
+
+        // Write the file to FFmpeg's virtual file system
+        ffmpeg.FS('writeFile', fileName, await fetchFile(file));
+
+        // Run the FFmpeg command
+        // -i: input
+        // -vn: no video
+        // -acodec libmp3lame: use mp3 codec
+        await ffmpeg.run('-i', fileName, '-vn', '-acodec', 'libmp3lame', 'output.mp3');
+
+        // Read the result
+        const data = ffmpeg.FS('readFile', 'output.mp3');
+
+        // Create a URL for the blob
+        const url = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mp3' }));
+        
+        // Update UI
+        loader.style.display = 'none';
+        message.innerText = 'Conversion Complete!';
+        
+        downloadLink.href = url;
+        downloadLink.download = fileName.replace('.mp4', '.mp3');
+        downloadLink.style.display = 'inline-block';
+    }
+
+    document.getElementById('uploader').addEventListener('change', transcode);
+</script>
+
+</body>
+</html>
