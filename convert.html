@@ -1,153 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local MP4 to MP3 Converter</title>
+    <title>Simple Audio Extractor</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 400px;
-        }
-        h2 { margin-top: 0; color: #333; }
-        .upload-btn-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            margin: 20px 0;
-        }
-        .btn {
-            border: 2px solid gray;
-            color: gray;
-            background-color: white;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .upload-btn-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        #status {
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #666;
-            min-height: 20px;
-        }
-        #downloadLink {
-            display: none;
-            margin-top: 20px;
-            text-decoration: none;
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-        }
-        /* Loader */
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: none;
-            margin: 10px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f0f0; }
+        #drop-zone { border: 2px dashed #bbb; padding: 40px; border-radius: 20px; background: white; cursor: pointer; }
+        #status { margin-top: 20px; color: #555; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; display: none; margin: 20px auto; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>MP4 to MP3 Converter</h2>
-    <p>Client-side only. No server upload.</p>
+    <h2>Video to Audio (WAV)</h2>
+    <div id="drop-zone">Click to select MP4 from S24</div>
+    <input type="file" id="file-input" accept="video/*" style="display:none">
     
-    <div class="upload-btn-wrapper">
-        <button class="btn">Select MP4 File</button>
-        <input type="file" id="uploader" accept="video/mp4" />
-    </div>
+    <div id="status">Ready.</div>
+    <button id="download-btn">Download Audio</button>
 
-    <div class="loader" id="loader"></div>
-    <div id="status">Waiting for file...</div>
-    <a id="downloadLink">Download MP3</a>
-</div>
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const status = document.getElementById('status');
+        const downloadBtn = document.getElementById('download-btn');
 
-<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+        dropZone.onclick = () => fileInput.click();
 
-<script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    
-    // Initialize FFmpeg
-    // log: true helps debug in the console
-    const ffmpeg = createFFmpeg({ log: true });
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-    const transcode = async ({ target: { files } }) => {
-        const message = document.getElementById('status');
-        const loader = document.getElementById('loader');
-        const downloadLink = document.getElementById('downloadLink');
+            status.innerText = "Processing audio... please wait.";
+            
+            const arrayBuffer = await file.arrayBuffer();
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            try {
+                // Decode the video's audio track
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                
+                // Convert buffer to WAV blob
+                const wavBlob = bufferToWave(audioBuffer, audioBuffer.length);
+                const url = URL.createObjectURL(wavBlob);
+                
+                status.innerText = "Conversion Finished!";
+                downloadBtn.style.display = "block";
+                downloadBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name.replace(/\.[^/.]+$/, "") + ".wav";
+                    a.click();
+                };
+            } catch (err) {
+                status.innerText = "Error: Use a standard MP4 file.";
+                console.error(err);
+            }
+        };
 
-        if (files.length === 0) return;
+        // Helper function to create the WAV file structure
+        function bufferToWave(abuffer, len) {
+            let numOfChan = abuffer.numberOfChannels,
+                length = len * numOfChan * 2 + 44,
+                buffer = new ArrayBuffer(length),
+                view = new DataView(buffer),
+                channels = [], i, sample,
+                offset = 0,
+                pos = 0;
 
-        const file = files[0];
-        const fileName = file.name;
-        
-        // Reset UI
-        downloadLink.style.display = 'none';
-        message.innerText = 'Loading FFmpeg core (first time takes a moment)...';
-        loader.style.display = 'block';
+            setUint32(0x46464952);                         
+            setUint32(length - 8);                         
+            setUint32(0x45564157);                         
+            setUint32(0x20746d66);                         
+            setUint32(16);                                 
+            setUint16(1);                                  
+            setUint16(numOfChan);
+            setUint32(abuffer.sampleRate);
+            setUint32(abuffer.sampleRate * 2 * numOfChan); 
+            setUint16(numOfChan * 2);                      
+            setUint16(16);                                 
+            setUint32(0x61746164);                         
+            setUint32(length - pos - 4);                   
 
-        if (!ffmpeg.isLoaded()) {
-            await ffmpeg.load();
+            for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+
+            while(pos < length) {
+                for(i = 0; i < numOfChan; i++) {             
+                    sample = Math.max(-1, Math.min(1, channels[i][offset])); 
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; 
+                    view.setInt16(pos, sample, true);          
+                    pos += 2;
+                }
+                offset++;                                     
+            }
+
+            return new Blob([buffer], {type: "audio/wav"});
+
+            function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+            function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
         }
-
-        message.innerText = 'Converting...';
-
-        // Write the file to FFmpeg's virtual file system
-        ffmpeg.FS('writeFile', fileName, await fetchFile(file));
-
-        // Run the FFmpeg command
-        // -i: input
-        // -vn: no video
-        // -acodec libmp3lame: use mp3 codec
-        await ffmpeg.run('-i', fileName, '-vn', '-acodec', 'libmp3lame', 'output.mp3');
-
-        // Read the result
-        const data = ffmpeg.FS('readFile', 'output.mp3');
-
-        // Create a URL for the blob
-        const url = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mp3' }));
-        
-        // Update UI
-        loader.style.display = 'none';
-        message.innerText = 'Conversion Complete!';
-        
-        downloadLink.href = url;
-        downloadLink.download = fileName.replace('.mp4', '.mp3');
-        downloadLink.style.display = 'inline-block';
-    }
-
-    document.getElementById('uploader').addEventListener('change', transcode);
-</script>
-
+    </script>
 </body>
 </html>
