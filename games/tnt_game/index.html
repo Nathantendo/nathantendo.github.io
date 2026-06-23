@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNT Bot Battle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="main-menu" class="menu-card">
+        <h1>TNT Bot Battle</h1>
+        <p class="subtitle">Unlimited Players!</p>
+        <div class="menu-buttons">
+            <button id="btn-play" class="menu-btn primary">PLAY GAME</button>
+            <button id="btn-settings" class="menu-btn">SETTINGS</button>
+        </div>
+    </div>
+
+    <div id="settings-menu" class="menu-card" style="display: none;">
+        <h2>GAME SETTINGS</h2>
+        <div class="settings-grid">
+            <div class="setting-row">
+                <label for="setting-sfx">Sound Effects (SFX)</label>
+                <input type="checkbox" id="setting-sfx" checked>
+            </div>
+            <div class="setting-row">
+                <label for="setting-arena">Arena Scale Multiplier</label>
+                <select id="setting-arena">
+                    <option value="normal">Normal (1.0x)</option>
+                    <option value="zoomed">Zoomed In (1.2x)</option>
+                    <option value="wide">Cinematic Wide (0.8x)</option>
+                </select>
+            </div>
+        </div>
+        <button id="btn-settings-back" class="menu-btn secondary">BACK TO MENU</button>
+    </div>
+
+    <div id="lobby-screen" class="menu-card" style="display: none;">
+        <h2 id="lobby-title">WAITING FOR CONTROLLERS...</h2>
+        <div id="connected-list"></div>
+        <div id="lobby-action-msg" class="start-prompt">PLAYER 1: PRESS JUMP TO START FIGHT!</div>
+        <button id="btn-lobby-back" class="menu-btn secondary" style="margin-top: 15px; pointer-events: auto;">LEAVE LOBBY</button>
+    </div>
+    
+    <div id="html-ui"></div>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="game.js"></script>
+</body>
+</html>
